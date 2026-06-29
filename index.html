@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1410">
+<title>소형 도서관</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --ink:#1a1410; --paper:#ece3d0; --paper2:#e3d8bf;
+    --leather:#7a3b2e; --gold:#c9a44c; --muted:#8a7d66; --line:#cdbfa2;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--ink); color:var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Helvetica Neue",sans-serif;
+    min-height:100vh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  header{
+    padding:22px 20px 14px;
+    background:linear-gradient(180deg,#241a12,#1a1410);
+    border-bottom:1px solid #2e2014;
+    position:sticky; top:0; z-index:20; backdrop-filter:blur(6px);
+  }
+  h1{margin:0; font-size:25px; letter-spacing:2px; font-family:Georgia,"Apple SD Gothic Neo",serif; font-weight:700;}
+  .sub{font-size:11px; color:var(--gold); letter-spacing:3px; text-transform:uppercase; margin-top:3px;}
+  .tagline{margin-top:6px; font-size:12px; color:var(--muted);}
+  .filters{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;}
+  .chip{font-size:13px; font-weight:600; padding:6px 14px; border-radius:16px; background:transparent; color:var(--muted); border:1px solid #4a3826;}
+  .chip.on{background:var(--gold); color:#2a1d12; border-color:var(--gold);}
+
+  .shelf-wrap{padding:18px 14px 40px;}
+  .shelf{margin-bottom:26px;}
+  .shelf-label{font-size:12px; color:var(--gold); letter-spacing:2px; margin:0 4px 10px; font-weight:600; text-transform:uppercase; display:flex; align-items:center; gap:8px;}
+  .shelf-label::after{content:""; flex:1; height:1px; background:linear-gradient(90deg,#4a3826,transparent);}
+  .books{display:flex; gap:9px; overflow-x:auto; padding:6px 4px 16px; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;}
+  .books::-webkit-scrollbar{height:0;}
+
+  .spine{
+    flex:0 0 auto; width:50px; height:185px; border-radius:3px 5px 5px 3px;
+    position:relative; scroll-snap-align:start; cursor:pointer;
+    box-shadow:inset -3px 0 6px rgba(0,0,0,0.35), inset 3px 0 4px rgba(255,255,255,0.12), 2px 3px 8px rgba(0,0,0,0.5);
+    display:flex; align-items:center; justify-content:center; transition:transform .18s ease; overflow:hidden;
+  }
+  .spine:active{transform:translateY(-4px);}
+  .spine::before{content:""; position:absolute; left:5px; top:0; bottom:0; width:2px; background:rgba(0,0,0,0.25);}
+  .spine::after{content:""; position:absolute; right:0; top:0; bottom:0; width:4px; background:linear-gradient(90deg,transparent,rgba(0,0,0,0.4));}
+  .spine-title{writing-mode:vertical-rl; font-family:Georgia,"Apple SD Gothic Neo",serif; font-weight:700; font-size:14px; color:#f3ecd8; text-shadow:0 1px 2px rgba(0,0,0,0.5); letter-spacing:1px; padding:10px 0; max-height:100%; overflow:hidden;}
+  .spine-band{position:absolute; left:0; right:0; height:20px; background:rgba(201,164,76,0.8); box-shadow:0 1px 2px rgba(0,0,0,0.3);}
+  .spine-band.top{top:16px;} .spine-band.bot{bottom:16px;}
+  .read-dot{position:absolute; top:6px; right:6px; width:9px; height:9px; border-radius:50%; background:#7fdca0; box-shadow:0 0 6px #7fdca0; display:none;}
+  .spine.read .read-dot{display:block;}
+
+  .overlay{position:fixed; inset:0; z-index:100; background:rgba(10,7,4,0.7); backdrop-filter:blur(3px); display:none; align-items:flex-end;}
+  .overlay.show{display:flex;}
+  .sheet{width:100%; max-height:92vh; background:var(--paper); color:var(--ink); border-radius:18px 18px 0 0; overflow-y:auto; -webkit-overflow-scrolling:touch; animation:rise .28s cubic-bezier(.2,.7,.3,1); padding-bottom:env(safe-area-inset-bottom); position:relative;}
+  @keyframes rise{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .grab{width:38px; height:4px; border-radius:2px; background:#c2b393; margin:10px auto 4px;}
+  .sheet-head{padding:14px 22px 18px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,var(--paper2),var(--paper));}
+  .sheet-title{font-family:Georgia,"Apple SD Gothic Neo",serif; font-size:26px; font-weight:700; margin:0 0 4px; color:#241a12;}
+  .sheet-meta{font-size:13px; color:var(--muted);}
+  .oneliner{margin-top:14px; padding:13px 15px; background:#f6efdd; border-left:3px solid var(--leather); border-radius:0 8px 8px 0; font-size:15px; line-height:1.55; color:#3a2c1c; font-weight:500;}
+  .sheet-body{padding:6px 22px 30px;}
+  .section{margin-top:24px;}
+  .section h3{font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--leather); margin:0 0 12px; font-weight:700; display:flex; align-items:center; gap:8px;}
+  .section h3::after{content:""; flex:1; height:1px; background:var(--line);}
+  .char{margin-bottom:12px; font-size:14.5px; line-height:1.5;}
+  .char b{color:#241a12;} .char span{color:#5a4c38;}
+  .plot p{font-size:15px; line-height:1.72; color:#33271a; margin:0 0 14px; position:relative; padding-left:24px;}
+  .plot p::before{content:attr(data-n); position:absolute; left:0; top:1px; font-family:Georgia,serif; font-weight:700; color:var(--gold); font-size:14px;}
+  .meaning{font-size:15px; line-height:1.72; color:#33271a; background:#f6efdd; padding:16px 18px; border-radius:10px; border:1px solid #e0d4b8;}
+  .tools{margin-top:26px; padding-top:20px; border-top:1px dashed var(--line);}
+  .read-btn{width:100%; padding:13px; border-radius:10px; font-size:15px; font-weight:700; margin-bottom:14px; background:#e8dcc0; color:#5a4c38; border:1.5px solid #cdbfa2;}
+  .read-btn.done{background:var(--leather); color:#f3ecd8; border-color:var(--leather);}
+  .memo-label{font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:600;}
+  textarea{width:100%; min-height:80px; resize:vertical; border:1.5px solid #cdbfa2; border-radius:10px; padding:11px 13px; font-size:14.5px; line-height:1.5; background:#fbf7ec; color:#33271a; font-family:inherit;}
+  textarea:focus{outline:none; border-color:var(--leather);}
+  .saved{font-size:12px; color:#5a8a5a; margin-top:6px; height:14px;}
+  .close-x{position:absolute; top:12px; right:16px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,0.06); border:none; font-size:18px; color:#5a4c38; display:flex; align-items:center; justify-content:center; z-index:2;}
+  footer{text-align:center; padding:24px 20px 40px; color:#4a3826; font-size:11px; line-height:1.6;}
+</style>
+</head>
+<body>
+  <header>
+    <h1>소형 도서관</h1>
+    <div class="sub">Tiny Library</div>
+    <div class="tagline">저작권이 풀린 명작들. 짧게 다시 떠올리기.</div>
+    <div class="filters" id="filters">
+      <button class="chip on" data-f="all">전체</button>
+      <button class="chip" data-f="세계">세계 명작</button>
+      <button class="chip" data-f="한국">한국 고전</button>
+      <button class="chip" data-f="read">읽음</button>
+    </div>
+  </header>
+
+  <div class="shelf-wrap" id="shelfWrap"></div>
+
+  <footer>
+    모든 작품은 저작권 보호 기간(작가 사후 70년)이 지난 퍼블릭 도메인입니다.<br>
+    요약·해석은 기억을 돕기 위한 짧은 안내입니다.
+  </footer>
+
+  <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+
+<script src="books.js"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const wrap=$('shelfWrap'), overlay=$('overlay'), sheet=$('sheet');
+  let filter='all', readSet=new Set(), memos={};
+
+  async function loadState(){
+    try{ const r=await window.storage.get('readSet'); if(r&&r.value) readSet=new Set(JSON.parse(r.value)); }catch(e){}
+    try{ const m=await window.storage.get('memos'); if(m&&m.value) memos=JSON.parse(m.value); }catch(e){}
+  }
+  async function saveRead(){ try{ await window.storage.set('readSet', JSON.stringify([...readSet])); }catch(e){} }
+  async function saveMemos(){ try{ await window.storage.set('memos', JSON.stringify(memos)); }catch(e){} }
+
+  function render(){
+    wrap.innerHTML='';
+    if(filter==='all'){
+      renderShelf('세계 명작', BOOKS.filter(b=>b.tag==='세계'));
+      renderShelf('한국 고전', BOOKS.filter(b=>b.tag==='한국'));
+    } else if(filter==='read'){
+      const list=BOOKS.filter(b=>readSet.has(b.id));
+      if(list.length) renderShelf('읽은 책', list);
+      else wrap.innerHTML='<div style="padding:50px 20px;text-align:center;color:#6a5a44;font-size:14px;line-height:1.6;">아직 읽음으로 표시한 책이 없어요.<br>책을 펼쳐 “다 읽음”을 눌러보세요.</div>';
+    } else {
+      renderShelf(filter==='세계'?'세계 명작':'한국 고전', BOOKS.filter(b=>b.tag===filter));
+    }
+  }
+  function renderShelf(label, books){
+    const shelf=document.createElement('div'); shelf.className='shelf';
+    const lab=document.createElement('div'); lab.className='shelf-label'; lab.textContent=label;
+    shelf.appendChild(lab);
+    const row=document.createElement('div'); row.className='books';
+    books.forEach(b=>row.appendChild(makeSpine(b)));
+    shelf.appendChild(row); wrap.appendChild(shelf);
+  }
+  function makeSpine(b){
+    const sp=document.createElement('div');
+    sp.className='spine'+(readSet.has(b.id)?' read':'');
+    sp.style.background=`linear-gradient(90deg, ${shade(b.spineColor,-12)}, ${b.spineColor} 30%, ${shade(b.spineColor,8)} 70%, ${shade(b.spineColor,-18)})`;
+    sp.innerHTML=`<div class="spine-band top"></div><div class="spine-title">${b.title}</div><div class="spine-band bot"></div><div class="read-dot"></div>`;
+    sp.addEventListener('click',()=>openBook(b));
+    return sp;
+  }
+  function shade(hex,amt){
+    const n=parseInt(hex.slice(1),16);
+    let r=(n>>16)+amt, g=((n>>8)&255)+amt, bl=(n&255)+amt;
+    r=Math.max(0,Math.min(255,r)); g=Math.max(0,Math.min(255,g)); bl=Math.max(0,Math.min(255,bl));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+bl).toString(16).slice(1);
+  }
+  function openBook(b){
+    const isRead=readSet.has(b.id), memo=memos[b.id]||'';
+    const charsHtml=b.chars.map(c=>`<div class="char"><b>${c[0]}</b> — <span>${c[1]}</span></div>`).join('');
+    const plotHtml=b.plot.map((p,i)=>`<p data-n="${i+1}.">${p}</p>`).join('');
+    sheet.innerHTML=`
+      <button class="close-x" id="closeX">✕</button>
+      <div class="grab"></div>
+      <div class="sheet-head">
+        <h2 class="sheet-title">${b.title}</h2>
+        <div class="sheet-meta">${b.author} · ${b.origin} · ${b.year}년</div>
+        <div class="oneliner">${b.oneLine}</div>
+      </div>
+      <div class="sheet-body">
+        <div class="section"><h3>핵심 인물</h3>${charsHtml}</div>
+        <div class="section"><h3>줄거리</h3><div class="plot">${plotHtml}</div></div>
+        <div class="section"><h3>해석</h3><div class="meaning">${b.meaning}</div></div>
+        <div class="tools">
+          <button class="read-btn ${isRead?'done':''}" id="readBtn">${isRead?'✓ 다 읽은 책':'다 읽음으로 표시'}</button>
+          <div class="memo-label">내 메모</div>
+          <textarea id="memo" placeholder="생각나는 점, 기억하고 싶은 구절을 적어두세요.">${memo}</textarea>
+          <div class="saved" id="savedMsg"></div>
+        </div>
+      </div>`;
+    overlay.classList.add('show'); document.body.style.overflow='hidden'; sheet.scrollTop=0;
+    $('closeX').addEventListener('click',closeBook);
+    $('readBtn').addEventListener('click',()=>{
+      if(readSet.has(b.id)) readSet.delete(b.id); else readSet.add(b.id);
+      saveRead();
+      const now=readSet.has(b.id), btn=$('readBtn');
+      btn.className='read-btn '+(now?'done':''); btn.textContent=now?'✓ 다 읽은 책':'다 읽음으로 표시';
+    });
+    let t=null;
+    $('memo').addEventListener('input',e=>{
+      memos[b.id]=e.target.value; clearTimeout(t);
+      t=setTimeout(async()=>{ await saveMemos(); const m=$('savedMsg'); if(m){m.textContent='저장됨'; setTimeout(()=>{if(m)m.textContent='';},1200);} },500);
+    });
+  }
+  function closeBook(){ overlay.classList.remove('show'); document.body.style.overflow=''; render(); }
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) closeBook(); });
+
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+      c.classList.add('on'); filter=c.dataset.f; render();
+    });
+  });
+
+  (async()=>{ await loadState(); render(); })();
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+})();
+</script>
+</body>
+</html>
