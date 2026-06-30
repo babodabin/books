@@ -325,8 +325,8 @@
         else goPage(curPage-1);
         return;
       }
-      // 아래로 스와이프 = 닫기 — 둔감하게: 맨 위에서, 길게(180px+), 천천히(너무 빠른 플릭 무시), 거의 수직일 때만
-      if(atTop && dy>180 && Math.abs(dy)>Math.abs(dx)*2.2 && dt>120){
+      // 아래로 스와이프 = 닫기 — 살살: 맨 위에서, 적당히(110px+), 거의 수직일 때
+      if(atTop && dy>110 && Math.abs(dy)>Math.abs(dx)*1.6){
         closeBook();
       }
     },{passive:true});
