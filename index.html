@@ -60,7 +60,10 @@
 
   .overlay{position:fixed; inset:0; z-index:100; background:rgba(10,7,4,0.7); backdrop-filter:blur(3px); display:none; align-items:flex-end;}
   .overlay.show{display:flex;}
-  .sheet{width:100%; max-height:92vh; background:var(--paper); color:var(--ink); border-radius:18px 18px 0 0; overflow-y:auto; -webkit-overflow-scrolling:touch; animation:rise .28s cubic-bezier(.2,.7,.3,1); padding-bottom:env(safe-area-inset-bottom); position:relative;}
+  .sheet{width:100%; height:92vh; max-height:92vh; background:var(--paper); color:var(--ink); border-radius:18px 18px 0 0; overflow:hidden; -webkit-overflow-scrolling:touch; animation:rise .28s cubic-bezier(.2,.7,.3,1); position:relative; display:flex; flex-direction:column;}
+  .sheet-head{flex:0 0 auto;}
+  .sheet-body{flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;}
+  .jumpbar{flex:0 0 auto;}
   @keyframes rise{from{transform:translateY(100%);}to{transform:translateY(0);}}
   .grab{width:38px; height:4px; border-radius:2px; background:#c2b393; margin:10px auto 4px;}
   .sheet-head{padding:14px 22px 18px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,var(--paper2),var(--paper));}
@@ -82,6 +85,10 @@
   .m-item{margin-bottom:18px;}
   .m-h{font-family:Georgia,"Apple SD Gothic Neo",serif; font-size:15.5px; font-weight:700; color:#5a3e2c; margin-bottom:6px;}
   .m-b{font-size:14.5px; line-height:1.75; color:#33271a;}
+  .jumpbar{display:flex; align-items:center; justify-content:center; gap:8px; padding:9px 12px calc(11px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:var(--paper2);}
+  .jb{background:#e8dcc0; border:1.5px solid #cdbfa2; color:#5a4c38; border-radius:8px; padding:7px 12px; font-size:13px; font-weight:600;}
+  .jb:disabled{opacity:0.35;}
+  .jb-pos{font-size:12.5px; color:#8a7d66; font-weight:600; min-width:54px; text-align:center;}
   .section{margin-top:24px;}
   .section h3{font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--leather); margin:0 0 12px; font-weight:700; display:flex; align-items:center; gap:8px;}
   .section h3::after{content:""; flex:1; height:1px; background:var(--line);}
@@ -128,14 +135,16 @@
 (function(){
   const $=id=>document.getElementById(id);
   const wrap=$('shelfWrap'), overlay=$('overlay'), sheet=$('sheet');
-  let filter='all', readSet=new Set(), memos={};
+  let filter='all', readSet=new Set(), memos={}, progress={};
 
   async function loadState(){
     try{ const r=await window.storage.get('readSet'); if(r&&r.value) readSet=new Set(JSON.parse(r.value)); }catch(e){}
     try{ const m=await window.storage.get('memos'); if(m&&m.value) memos=JSON.parse(m.value); }catch(e){}
+    try{ const p=await window.storage.get('progress'); if(p&&p.value) progress=JSON.parse(p.value); }catch(e){}
   }
   async function saveRead(){ try{ await window.storage.set('readSet', JSON.stringify([...readSet])); }catch(e){} }
   async function saveMemos(){ try{ await window.storage.set('memos', JSON.stringify(memos)); }catch(e){} }
+  async function saveProgress(){ try{ await window.storage.set('progress', JSON.stringify(progress)); }catch(e){} }
 
   function render(){
     wrap.innerHTML='';
@@ -188,7 +197,9 @@
   }
 
   function openBook(b){
-    curBook=b; curPage=0; slides=buildSlides(b);
+    curBook=b; slides=buildSlides(b);
+    const saved=progress[b.id]||0;
+    curPage=Math.min(Math.max(0,saved), slides.length-1);
     overlay.classList.add('show'); document.body.style.overflow='hidden';
     renderSheet();
   }
@@ -243,11 +254,23 @@
           <div class="dots">${dotsHtml}</div>
         </div>
       </div>
-      <div class="sheet-body" id="sheetBody"><div class="slide" id="slide">${inner}</div></div>`;
+      <div class="sheet-body" id="sheetBody"><div class="slide" id="slide">${inner}</div></div>
+      <div class="jumpbar">
+        <button class="jb" id="jbFirst" ${curPage===0?'disabled':''} aria-label="첫 페이지">⏮ 처음</button>
+        <button class="jb" id="jbPrev" ${curPage===0?'disabled':''} aria-label="이전">‹</button>
+        <span class="jb-pos">${curPage+1} / ${slides.length}</span>
+        <button class="jb" id="jbNext" ${curPage===slides.length-1?'disabled':''} aria-label="다음">›</button>
+        <button class="jb" id="jbLast" ${curPage===slides.length-1?'disabled':''} aria-label="마지막 페이지">끝 ⏭</button>
+      </div>`;
     sheet.scrollTop=0;
     const body=$('sheetBody'); if(body) body.scrollTop=0;
 
     $('closeX').addEventListener('click',closeBook);
+    const jf=$('jbFirst'), jl=$('jbLast'), jp=$('jbPrev'), jn=$('jbNext');
+    if(jf) jf.addEventListener('click',jumpFirst);
+    if(jl) jl.addEventListener('click',jumpLast);
+    if(jp) jp.addEventListener('click',()=>goPage(curPage-1));
+    if(jn) jn.addEventListener('click',()=>goPage(curPage+1));
     bindReadMemo(b);
     bindSwipe();
   }
@@ -271,42 +294,48 @@
   }
 
   function goPage(n){
-    if(n<0 || n>=slides.length) return;
+    if(n<0 || n>=slides.length || n===curPage) return;
     const slideEl=$('slide');
     if(slideEl){
       slideEl.style.transition='transform .18s ease, opacity .18s ease';
       slideEl.style.transform = n>curPage ? 'translateX(-14px)' : 'translateX(14px)';
       slideEl.style.opacity='0';
     }
-    setTimeout(()=>{ curPage=n; renderSheet(); }, 130);
+    setTimeout(()=>{ curPage=n; if(curBook){ progress[curBook.id]=curPage; saveProgress(); } renderSheet(); }, 130);
   }
+  function jumpFirst(){ goPage(0); }
+  function jumpLast(){ goPage(slides.length-1); }
 
   function bindSwipe(){
     const body=$('sheetBody');
     if(!body) return;
-    let x0=null,y0=null,active=false;
+    let x0=null,y0=null,t0=0,active=false;
     body.addEventListener('touchstart',e=>{
-      x0=e.touches[0].clientX; y0=e.touches[0].clientY; active=true;
+      x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now(); active=true;
     },{passive:true});
     body.addEventListener('touchend',e=>{
       if(!active||x0===null) return; active=false;
       const dx=e.changedTouches[0].clientX-x0;
       const dy=e.changedTouches[0].clientY-y0;
+      const dt=Date.now()-t0;
       const atTop=body.scrollTop<=2;
-      // 좌우 스와이프 = 페이지 넘김 (가로 우세)
-      if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.3){
-        if(dx<0) goPage(curPage+1);   // 왼쪽으로 밀기 → 다음
-        else goPage(curPage-1);       // 오른쪽으로 밀기 → 이전
+      // 좌우 스와이프 = 페이지 넘김 (가로가 충분히 우세할 때만)
+      if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){
+        if(dx<0) goPage(curPage+1);
+        else goPage(curPage-1);
         return;
       }
-      // 아래로 스와이프 (맨 위에서) = 닫기
-      if(dy>90 && Math.abs(dy)>Math.abs(dx)*1.3 && atTop){
+      // 아래로 스와이프 = 닫기 — 둔감하게: 맨 위에서, 길게(180px+), 천천히(너무 빠른 플릭 무시), 거의 수직일 때만
+      if(atTop && dy>180 && Math.abs(dy)>Math.abs(dx)*2.2 && dt>120){
         closeBook();
       }
     },{passive:true});
   }
 
-  function closeBook(){ overlay.classList.remove('show'); document.body.style.overflow=''; render(); }
+  function closeBook(){
+    if(curBook){ progress[curBook.id]=curPage; saveProgress(); }
+    overlay.classList.remove('show'); document.body.style.overflow=''; render();
+  }
   overlay.addEventListener('click',e=>{ if(e.target===overlay) closeBook(); });
 
   document.querySelectorAll('.chip').forEach(c=>{
