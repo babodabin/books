@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#1a1410">
 <title>소형 도서관</title>
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
 <style>
   :root{
     --ink:#1a1410; --paper:#ece3d0; --paper2:#e3d8bf;
@@ -40,17 +41,20 @@
   .books::-webkit-scrollbar{height:0;}
 
   .spine{
-    flex:0 0 auto; width:50px; height:185px; border-radius:3px 5px 5px 3px;
+    flex:0 0 auto; width:52px; height:190px; border-radius:3px 6px 6px 3px;
     position:relative; scroll-snap-align:start; cursor:pointer;
-    box-shadow:inset -3px 0 6px rgba(0,0,0,0.35), inset 3px 0 4px rgba(255,255,255,0.12), 2px 3px 8px rgba(0,0,0,0.5);
+    box-shadow:inset -4px 0 8px rgba(0,0,0,0.4), inset 4px 0 5px rgba(255,255,255,0.14), 2px 3px 9px rgba(0,0,0,0.55);
     display:flex; align-items:center; justify-content:center; transition:transform .18s ease; overflow:hidden;
   }
-  .spine:active{transform:translateY(-4px);}
-  .spine::before{content:""; position:absolute; left:5px; top:0; bottom:0; width:2px; background:rgba(0,0,0,0.25);}
-  .spine::after{content:""; position:absolute; right:0; top:0; bottom:0; width:4px; background:linear-gradient(90deg,transparent,rgba(0,0,0,0.4));}
-  .spine-title{writing-mode:vertical-rl; font-family:Georgia,"Apple SD Gothic Neo",serif; font-weight:700; font-size:14px; color:#f3ecd8; text-shadow:0 1px 2px rgba(0,0,0,0.5); letter-spacing:1px; padding:10px 0; max-height:100%; overflow:hidden;}
-  .spine-band{position:absolute; left:0; right:0; height:20px; background:rgba(201,164,76,0.8); box-shadow:0 1px 2px rgba(0,0,0,0.3);}
-  .spine-band.top{top:16px;} .spine-band.bot{bottom:16px;}
+  .spine:active{transform:translateY(-5px);}
+  /* 책등 세로 가죽 결 */
+  .spine::before{content:""; position:absolute; left:6px; top:0; bottom:0; width:2px; background:rgba(0,0,0,0.28);}
+  .spine::after{content:""; position:absolute; right:0; top:0; bottom:0; width:5px; background:linear-gradient(90deg,transparent,rgba(0,0,0,0.45));}
+  /* 금박 이중 띠 (위) */
+  .spine-band{position:absolute; left:0; right:0; height:14px; box-sizing:border-box; border-top:1.5px solid rgba(201,164,76,0.9); border-bottom:1.5px solid rgba(201,164,76,0.9); background:rgba(201,164,76,0.18);}
+  .spine-band.top{top:14px;} .spine-band.bot{bottom:14px;}
+  /* 제목 칸 (금박 테두리 안) */
+  .spine-title{writing-mode:vertical-rl; font-family:Georgia,"Apple SD Gothic Neo",serif; font-weight:700; font-size:13.5px; color:#f6eed6; text-shadow:0 1px 2px rgba(0,0,0,0.6); letter-spacing:1.5px; padding:12px 3px; max-height:62%; overflow:hidden; border:1px solid rgba(201,164,76,0.55); border-radius:3px;}
   .read-dot{position:absolute; top:6px; right:6px; width:9px; height:9px; border-radius:50%; background:#7fdca0; box-shadow:0 0 6px #7fdca0; display:none;}
   .spine.read .read-dot{display:block;}
 
@@ -63,7 +67,24 @@
   .sheet-title{font-family:Georgia,"Apple SD Gothic Neo",serif; font-size:26px; font-weight:700; margin:0 0 4px; color:#241a12;}
   .sheet-meta{font-size:13px; color:var(--muted);}
   .oneliner{margin-top:14px; padding:13px 15px; background:#f6efdd; border-left:3px solid var(--leather); border-radius:0 8px 8px 0; font-size:15px; line-height:1.55; color:#3a2c1c; font-weight:500;}
-  .sheet-body{padding:6px 22px 30px;}
+  .sheet-body{padding:0 0 0;}
+  .volbar{display:flex; background:#ddd0b3; border-bottom:1px solid #cdbfa2;}
+  .vseg{flex:1; text-align:center; padding:8px 0; font-size:12px; font-weight:600; color:#8a7d66; border-right:1px solid #cdbfa2;}
+  .vseg:last-child{border-right:none;}
+  .vseg.on{background:var(--leather); color:#f3ecd8;}
+  .page-body{padding:16px 22px 14px; min-height:46vh;}
+  .page-title{font-family:Georgia,"Apple SD Gothic Neo",serif; font-size:18px; font-weight:700; color:var(--leather); margin-bottom:14px;}
+  .plot-flow p{font-size:15px; line-height:1.78; color:#33271a; margin:0 0 15px;}
+  .plot-flow p:last-child{margin-bottom:0;}
+  .pager{display:flex; align-items:center; justify-content:space-between; padding:11px 16px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); position:sticky; bottom:0; background:var(--paper);}
+  .pg-btn{background:#e8dcc0; border:1.5px solid #cdbfa2; color:#5a4c38; border-radius:9px; padding:9px 15px; font-size:14px; font-weight:600;}
+  .pg-btn.prim{background:var(--leather); border-color:var(--leather); color:#f3ecd8;}
+  .pg-btn:disabled{opacity:0.4;}
+  .dots{display:flex; gap:6px; align-items:center;}
+  .dots span{width:7px; height:7px; border-radius:50%; background:#cdbfa2;}
+  .dots span.on{background:var(--leather); transform:scale(1.15);}
+  .dots span.end{width:7px; height:7px; border-radius:2px; background:#cdbfa2;}
+  .dots span.end.on{background:var(--gold);}
   .section{margin-top:24px;}
   .section h3{font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--leather); margin:0 0 12px; font-weight:700; display:flex; align-items:center; gap:8px;}
   .section h3::after{content:""; flex:1; height:1px; background:var(--line);}
@@ -154,42 +175,107 @@
     r=Math.max(0,Math.min(255,r)); g=Math.max(0,Math.min(255,g)); bl=Math.max(0,Math.min(255,bl));
     return '#'+((1<<24)+(r<<16)+(g<<8)+bl).toString(16).slice(1);
   }
+  let curBook=null, curPage=0;
+
   function openBook(b){
+    curBook=b; curPage=0;
+    overlay.classList.add('show'); document.body.style.overflow='hidden';
+    renderSheet();
+  }
+
+  function renderSheet(){
+    const b=curBook;
     const isRead=readSet.has(b.id), memo=memos[b.id]||'';
     const charsHtml=b.chars.map(c=>`<div class="char"><b>${c[0]}</b> — <span>${c[1]}</span></div>`).join('');
-    const plotHtml=b.plot.map((p,i)=>`<p data-n="${i+1}.">${p}</p>`).join('');
+
+    // 장편: 페이지 넘김 / 단편: 한 화면
+    let bodyHtml;
+    if(b.long && b.pages){
+      const total=b.pages.length;
+      // 페이지 인덱스: 0..total-1 = 줄거리 페이지, total = 인물+해석+메모(마지막)
+      if(curPage < total){
+        const pg=b.pages[curPage];
+        const psHtml=pg.ps.map(p=>`<p>${p}</p>`).join('');
+        const volSet=[...new Set(b.pages.map(p=>p.vol))];
+        const volBar=volSet.length>1 ? `<div class="volbar">${volSet.map(v=>`<div class="vseg ${v===pg.vol?'on':''}">${v}</div>`).join('')}</div>` : '';
+        bodyHtml=`
+          ${volBar}
+          <div class="page-body">
+            <div class="page-title">${pg.t}</div>
+            <div class="plot-flow">${psHtml}</div>
+          </div>
+          <div class="pager">
+            <button class="pg-btn" id="prevPg" ${curPage===0?'disabled':''}>‹ 이전</button>
+            <div class="dots">${b.pages.map((_,i)=>`<span class="${i===curPage?'on':''}"></span>`).join('')}<span class="end ${curPage===total?'on':''}"></span></div>
+            <button class="pg-btn prim" id="nextPg">${curPage===total-1?'마무리 ›':'다음 ›'}</button>
+          </div>`;
+      } else {
+        // 마지막: 인물 + 해석 + 도구
+        bodyHtml=`
+          <div class="page-body">
+            <div class="section"><h3>핵심 인물</h3>${charsHtml}</div>
+            <div class="section"><h3>해석</h3><div class="meaning">${b.meaning}</div></div>
+            <div class="tools">
+              <button class="read-btn ${isRead?'done':''}" id="readBtn">${isRead?'✓ 다 읽은 책':'다 읽음으로 표시'}</button>
+              <div class="memo-label">내 메모</div>
+              <textarea id="memo" placeholder="생각나는 점, 기억하고 싶은 구절을 적어두세요.">${memo}</textarea>
+              <div class="saved" id="savedMsg"></div>
+            </div>
+          </div>
+          <div class="pager">
+            <button class="pg-btn" id="prevPg">‹ 줄거리</button>
+            <div class="dots">${b.pages.map(()=>`<span></span>`).join('')}<span class="end on"></span></div>
+            <button class="pg-btn" id="closeEnd">닫기</button>
+          </div>`;
+      }
+    } else {
+      const plotHtml=b.plot.map((p,i)=>`<p data-n="${i+1}.">${p}</p>`).join('');
+      bodyHtml=`
+        <div class="page-body">
+          <div class="section"><h3>핵심 인물</h3>${charsHtml}</div>
+          <div class="section"><h3>줄거리</h3><div class="plot">${plotHtml}</div></div>
+          <div class="section"><h3>해석</h3><div class="meaning">${b.meaning}</div></div>
+          <div class="tools">
+            <button class="read-btn ${isRead?'done':''}" id="readBtn">${isRead?'✓ 다 읽은 책':'다 읽음으로 표시'}</button>
+            <div class="memo-label">내 메모</div>
+            <textarea id="memo" placeholder="생각나는 점, 기억하고 싶은 구절을 적어두세요.">${memo}</textarea>
+            <div class="saved" id="savedMsg"></div>
+          </div>
+        </div>`;
+    }
+
     sheet.innerHTML=`
       <button class="close-x" id="closeX">✕</button>
       <div class="grab"></div>
       <div class="sheet-head">
         <h2 class="sheet-title">${b.title}</h2>
-        <div class="sheet-meta">${b.author} · ${b.origin} · ${b.year}년</div>
+        <div class="sheet-meta">${b.author} · ${b.origin} · ${b.year}년${b.structure?' · '+b.structure:''}</div>
         <div class="oneliner">${b.oneLine}</div>
       </div>
-      <div class="sheet-body">
-        <div class="section"><h3>핵심 인물</h3>${charsHtml}</div>
-        <div class="section"><h3>줄거리</h3><div class="plot">${plotHtml}</div></div>
-        <div class="section"><h3>해석</h3><div class="meaning">${b.meaning}</div></div>
-        <div class="tools">
-          <button class="read-btn ${isRead?'done':''}" id="readBtn">${isRead?'✓ 다 읽은 책':'다 읽음으로 표시'}</button>
-          <div class="memo-label">내 메모</div>
-          <textarea id="memo" placeholder="생각나는 점, 기억하고 싶은 구절을 적어두세요.">${memo}</textarea>
-          <div class="saved" id="savedMsg"></div>
-        </div>
-      </div>`;
-    overlay.classList.add('show'); document.body.style.overflow='hidden'; sheet.scrollTop=0;
+      <div class="sheet-body">${bodyHtml}</div>`;
+    sheet.scrollTop=0;
+
     $('closeX').addEventListener('click',closeBook);
-    $('readBtn').addEventListener('click',()=>{
+    const prevB=$('prevPg'), nextB=$('nextPg'), closeEnd=$('closeEnd');
+    if(prevB) prevB.addEventListener('click',()=>{ if(curPage>0){curPage--; renderSheet();} });
+    if(nextB) nextB.addEventListener('click',()=>{ curPage++; renderSheet(); });
+    if(closeEnd) closeEnd.addEventListener('click',closeBook);
+
+    const rb=$('readBtn');
+    if(rb) rb.addEventListener('click',()=>{
       if(readSet.has(b.id)) readSet.delete(b.id); else readSet.add(b.id);
       saveRead();
-      const now=readSet.has(b.id), btn=$('readBtn');
-      btn.className='read-btn '+(now?'done':''); btn.textContent=now?'✓ 다 읽은 책':'다 읽음으로 표시';
+      const now=readSet.has(b.id);
+      rb.className='read-btn '+(now?'done':''); rb.textContent=now?'✓ 다 읽은 책':'다 읽음으로 표시';
     });
-    let t=null;
-    $('memo').addEventListener('input',e=>{
-      memos[b.id]=e.target.value; clearTimeout(t);
-      t=setTimeout(async()=>{ await saveMemos(); const m=$('savedMsg'); if(m){m.textContent='저장됨'; setTimeout(()=>{if(m)m.textContent='';},1200);} },500);
-    });
+    const mz=$('memo');
+    if(mz){
+      let t=null;
+      mz.addEventListener('input',e=>{
+        memos[b.id]=e.target.value; clearTimeout(t);
+        t=setTimeout(async()=>{ await saveMemos(); const m=$('savedMsg'); if(m){m.textContent='저장됨'; setTimeout(()=>{if(m)m.textContent='';},1200);} },500);
+      });
+    }
   }
   function closeBook(){ overlay.classList.remove('show'); document.body.style.overflow=''; render(); }
   overlay.addEventListener('click',e=>{ if(e.target===overlay) closeBook(); });
