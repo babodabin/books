@@ -116,6 +116,7 @@
     <div class="filters" id="filters">
       <button class="chip on" data-f="all">전체</button>
       <button class="chip" data-f="세계">세계 명작</button>
+      <button class="chip" data-f="동양">동양 명작</button>
       <button class="chip" data-f="한국">한국 고전</button>
       <button class="chip" data-f="read">읽음</button>
     </div>
@@ -159,13 +160,14 @@
     wrap.innerHTML='';
     if(filter==='all'){
       renderShelf('세계 명작', BOOKS.filter(b=>b.tag==='세계'));
+      renderShelf('동양 명작', BOOKS.filter(b=>b.tag==='동양'));
       renderShelf('한국 고전', BOOKS.filter(b=>b.tag==='한국'));
     } else if(filter==='read'){
       const list=BOOKS.filter(b=>readSet.has(b.id));
       if(list.length) renderShelf('읽은 책', list);
       else wrap.innerHTML='<div style="padding:50px 20px;text-align:center;color:#6a5a44;font-size:14px;line-height:1.6;">아직 읽음으로 표시한 책이 없어요.<br>책을 펼쳐 “다 읽음”을 눌러보세요.</div>';
     } else {
-      renderShelf(filter==='세계'?'세계 명작':'한국 고전', BOOKS.filter(b=>b.tag===filter));
+      renderShelf(filter==='세계'?'세계 명작':filter==='동양'?'동양 명작':'한국 고전', BOOKS.filter(b=>b.tag===filter));
     }
   }
   function renderShelf(label, books){
@@ -336,19 +338,31 @@
       if(!active||x0===null) return; active=false;
       const dx=e.changedTouches[0].clientX-x0;
       const dy=e.changedTouches[0].clientY-y0;
-      const dt=Date.now()-t0;
-      const atTop=body.scrollTop<=2;
       // 좌우 스와이프 = 페이지 넘김 (가로가 충분히 우세할 때만)
       if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){
         if(dx<0) goPage(curPage+1);
         else goPage(curPage-1);
-        return;
       }
-      // 아래로 스와이프 = 닫기 — 살살: 맨 위에서, 적당히(110px+), 거의 수직일 때
-      if(atTop && dy>110 && Math.abs(dy)>Math.abs(dx)*1.6){
-        closeBook();
-      }
+      // 본문에서는 아래로 내려도 닫히지 않음 — 닫기는 상단 헤더에서만
     },{passive:true});
+
+    // 아래로 드래그 닫기: 시트 상단(손잡이+헤더)에서만, 140px 이상 확실히 내렸을 때
+    const head=sheet.querySelector('.sheet-head');
+    const grab=sheet.querySelector('.grab');
+    [head,grab].forEach(el=>{
+      if(!el) return;
+      let hy0=null,hx0=null;
+      el.addEventListener('touchstart',e=>{
+        hy0=e.touches[0].clientY; hx0=e.touches[0].clientX;
+      },{passive:true});
+      el.addEventListener('touchend',e=>{
+        if(hy0===null) return;
+        const dy=e.changedTouches[0].clientY-hy0;
+        const dx=e.changedTouches[0].clientX-hx0;
+        hy0=null;
+        if(dy>140 && Math.abs(dy)>Math.abs(dx)*1.6) closeBook();
+      },{passive:true});
+    });
   }
 
   function closeBook(){
