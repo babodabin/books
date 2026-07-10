@@ -137,14 +137,23 @@
   const wrap=$('shelfWrap'), overlay=$('overlay'), sheet=$('sheet');
   let filter='all', readSet=new Set(), memos={}, progress={};
 
+  // 저장소 어댑터: Claude 아티팩트에서는 window.storage, PWA/브라우저에서는 localStorage
+  const PFX='library:';
+  const store = (typeof window.storage!=='undefined' && window.storage && window.storage.get)
+    ? window.storage
+    : {
+        async get(k){ const v=localStorage.getItem(PFX+k); return v===null?null:{key:k,value:v}; },
+        async set(k,v){ localStorage.setItem(PFX+k,v); return {key:k,value:v}; }
+      };
+
   async function loadState(){
-    try{ const r=await window.storage.get('readSet'); if(r&&r.value) readSet=new Set(JSON.parse(r.value)); }catch(e){}
-    try{ const m=await window.storage.get('memos'); if(m&&m.value) memos=JSON.parse(m.value); }catch(e){}
-    try{ const p=await window.storage.get('progress'); if(p&&p.value) progress=JSON.parse(p.value); }catch(e){}
+    try{ const r=await store.get('readSet'); if(r&&r.value) readSet=new Set(JSON.parse(r.value)); }catch(e){}
+    try{ const m=await store.get('memos'); if(m&&m.value) memos=JSON.parse(m.value); }catch(e){}
+    try{ const p=await store.get('progress'); if(p&&p.value) progress=JSON.parse(p.value); }catch(e){}
   }
-  async function saveRead(){ try{ await window.storage.set('readSet', JSON.stringify([...readSet])); }catch(e){} }
-  async function saveMemos(){ try{ await window.storage.set('memos', JSON.stringify(memos)); }catch(e){} }
-  async function saveProgress(){ try{ await window.storage.set('progress', JSON.stringify(progress)); }catch(e){} }
+  async function saveRead(){ try{ await store.set('readSet', JSON.stringify([...readSet])); }catch(e){} }
+  async function saveMemos(){ try{ await store.set('memos', JSON.stringify(memos)); }catch(e){} }
+  async function saveProgress(){ try{ await store.set('progress', JSON.stringify(progress)); }catch(e){} }
 
   function render(){
     wrap.innerHTML='';
@@ -192,6 +201,8 @@
     } else if(b.plot){
       arr.push({kind:'plotSimple'});
     }
+    if(b.bg) arr.push({kind:'bg'});
+    if(b.symbols) arr.push({kind:'symbols'});
     arr.push({kind:'meaning'});
     return arr;
   }
@@ -223,6 +234,14 @@
       volLabel='줄거리';
       const plotHtml=b.plot.map((p,i)=>`<p data-n="${i+1}.">${p}</p>`).join('');
       inner=`<div class="page-title">줄거리</div><div class="plot">${plotHtml}</div>`;
+    } else if(slide.kind==='bg'){
+      volLabel='배경';
+      const bgHtml=b.bg.map(m=>`<div class="m-item"><div class="m-h">${m[0]}</div><div class="m-b">${m[1]}</div></div>`).join('');
+      inner=`<div class="page-title">작가와 시대</div>${bgHtml}`;
+    } else if(slide.kind==='symbols'){
+      volLabel='상징';
+      const syHtml=b.symbols.map(m=>`<div class="m-item"><div class="m-h">${m[0]}</div><div class="m-b">${m[1]}</div></div>`).join('');
+      inner=`<div class="page-title">상징과 장치</div>${syHtml}`;
     } else if(slide.kind==='meaning'){
       volLabel='해석';
       let mHtml;
