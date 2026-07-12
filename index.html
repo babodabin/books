@@ -224,8 +224,8 @@
 
     if(slide.kind==='chars'){
       const charsHtml=b.chars.map(c=>`<div class="char"><b>${c[0]}</b> — <span>${c[1]}</span></div>`).join('');
-      volLabel='등장인물';
-      inner=`<div class="page-title">핵심 인물</div><div class="chars-wrap">${charsHtml}</div>
+      volLabel=b.charsVol||'등장인물';
+      inner=`<div class="page-title">${b.charsTitle||'핵심 인물'}</div><div class="chars-wrap">${charsHtml}</div>
         <div class="swipe-hint">← 옆으로 넘기면 줄거리가 시작됩니다</div>`;
     } else if(slide.kind==='plot'){
       const pg=b.pages[slide.idx];
