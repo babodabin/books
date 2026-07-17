@@ -118,6 +118,7 @@
       <button class="chip" data-f="세계">세계 명작</button>
       <button class="chip" data-f="동양">동양 명작</button>
       <button class="chip" data-f="한국">한국 고전</button>
+      <button class="chip" data-f="현대">현대</button>
       <button class="chip" data-f="read">읽음</button>
     </div>
   </header>
@@ -162,12 +163,13 @@
       renderShelf('세계 명작', BOOKS.filter(b=>b.tag==='세계'));
       renderShelf('동양 명작', BOOKS.filter(b=>b.tag==='동양'));
       renderShelf('한국 고전', BOOKS.filter(b=>b.tag==='한국'));
+      renderShelf('현대', BOOKS.filter(b=>b.tag==='현대'));
     } else if(filter==='read'){
       const list=BOOKS.filter(b=>readSet.has(b.id));
       if(list.length) renderShelf('읽은 책', list);
       else wrap.innerHTML='<div style="padding:50px 20px;text-align:center;color:#6a5a44;font-size:14px;line-height:1.6;">아직 읽음으로 표시한 책이 없어요.<br>책을 펼쳐 “다 읽음”을 눌러보세요.</div>';
     } else {
-      renderShelf(filter==='세계'?'세계 명작':filter==='동양'?'동양 명작':'한국 고전', BOOKS.filter(b=>b.tag===filter));
+      renderShelf(filter==='세계'?'세계 명작':filter==='동양'?'동양 명작':filter==='현대'?'현대':'한국 고전', BOOKS.filter(b=>b.tag===filter));
     }
   }
   function renderShelf(label, books){
