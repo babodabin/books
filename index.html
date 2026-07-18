@@ -142,7 +142,7 @@
   const $=id=>document.getElementById(id);
   const wrap=$('shelfWrap'), overlay=$('overlay'), sheet=$('sheet');
   let filter='all', readSet=new Set(), memos={}, progress={};
-  let ttsMode=null, ttsSession=0;
+  let ttsMode=null, ttsSession=0, ttsRate=0.85;
 
   // 저장소 어댑터: Claude 아티팩트에서는 window.storage, PWA/브라우저에서는 localStorage
   const PFX='library:';
@@ -157,6 +157,7 @@
     try{ const r=await store.get('readSet'); if(r&&r.value) readSet=new Set(JSON.parse(r.value)); }catch(e){}
     try{ const m=await store.get('memos'); if(m&&m.value) memos=JSON.parse(m.value); }catch(e){}
     try{ const p=await store.get('progress'); if(p&&p.value) progress=JSON.parse(p.value); }catch(e){}
+    try{ const r=await store.get('ttsRate'); if(r&&r.value) ttsRate=parseFloat(r.value)||0.85; }catch(e){}
   }
   async function saveRead(){ try{ await store.set('readSet', JSON.stringify([...readSet])); }catch(e){} }
   async function saveMemos(){ try{ await store.set('memos', JSON.stringify(memos)); }catch(e){} }
@@ -270,8 +271,8 @@
 
     const dotsHtml=slides.map((_,i)=>`<span class="${i===curPage?'on':''}"></span>`).join('');
     const ttsRow = !('speechSynthesis' in window) ? '' : (ttsMode
-      ? `<div class="tts-row"><button class="tts-btn stop" id="ttsStop">■ 읽기 정지</button><span class="tts-ing">${ttsMode==='all'?'책 전체를 읽는 중…':'이 화면을 읽는 중…'}</span></div>`
-      : `<div class="tts-row"><button class="tts-btn" id="ttsAll">🔊 전체 읽기</button><button class="tts-btn" id="ttsPage">🔊 이 화면</button></div>`);
+      ? `<div class="tts-row"><button class="tts-btn stop" id="ttsStop">■ 읽기 정지</button><button class="tts-btn" id="ttsSpeed">${ttsRate.toFixed(2).replace(/0$/,'')}배속</button><span class="tts-ing">${ttsMode==='all'?'책 전체 읽는 중…':'이 화면 읽는 중…'}</span></div>`
+      : `<div class="tts-row"><button class="tts-btn" id="ttsAll">🔊 전체 읽기</button><button class="tts-btn" id="ttsPage">🔊 이 화면</button><button class="tts-btn" id="ttsSpeed">${ttsRate.toFixed(2).replace(/0$/,'')}배속</button></div>`);
 
     sheet.innerHTML=`
       <button class="close-x" id="closeX">✕</button>
@@ -307,6 +308,13 @@
     if(ta) ta.addEventListener('click',()=>startTTS('all'));
     if(tp) tp.addEventListener('click',()=>startTTS('page'));
     if(ts) ts.addEventListener('click',()=>stopTTS());
+    const tsp=$('ttsSpeed');
+    if(tsp) tsp.addEventListener('click',()=>{
+      const steps=[0.7,0.85,1.0,1.15];
+      ttsRate=steps[(steps.indexOf(ttsRate)+1) % steps.length] || 0.85;
+      try{ store.set('ttsRate', String(ttsRate)); }catch(e){}
+      tsp.textContent=ttsRate.toFixed(2).replace(/0$/,'')+'배속';
+    });
     bindReadMemo(b);
     bindSwipe();
   }
@@ -360,7 +368,7 @@
       if(sess!==ttsSession || !ttsMode) return;
       if(i>=list.length){ if(onDone) onDone(); return; }
       const u=new SpeechSynthesisUtterance(list[i++]);
-      u.lang='ko-KR'; u.rate=1;
+      u.lang='ko-KR'; u.rate=ttsRate;
       try{ const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.indexOf('ko')===0); if(v) u.voice=v; }catch(e){}
       u.onend=next; u.onerror=next;
       speechSynthesis.speak(u);
