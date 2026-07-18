@@ -106,6 +106,10 @@
   .saved{font-size:12px; color:#5a8a5a; margin-top:6px; height:14px;}
   .close-x{position:absolute; top:12px; right:16px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,0.06); border:none; font-size:18px; color:#5a4c38; display:flex; align-items:center; justify-content:center; z-index:2;}
   footer{text-align:center; padding:24px 20px 40px; color:#4a3826; font-size:11px; line-height:1.6;}
+.tts-row{display:flex; gap:8px; align-items:center; margin-top:10px;}
+  .tts-btn{border:1px solid var(--line); background:var(--paper2); color:inherit; font:inherit; font-size:12.5px; padding:6px 12px; border-radius:14px; -webkit-tap-highlight-color:transparent;}
+  .tts-btn.stop{background:#7a3030; color:#fff; border-color:#7a3030;}
+  .tts-ing{font-size:12px; opacity:.65;}
 </style>
 </head>
 <body>
@@ -138,6 +142,7 @@
   const $=id=>document.getElementById(id);
   const wrap=$('shelfWrap'), overlay=$('overlay'), sheet=$('sheet');
   let filter='all', readSet=new Set(), memos={}, progress={};
+  let ttsMode=null, ttsSession=0;
 
   // 저장소 어댑터: Claude 아티팩트에서는 window.storage, PWA/브라우저에서는 localStorage
   const PFX='library:';
@@ -264,6 +269,9 @@
     }
 
     const dotsHtml=slides.map((_,i)=>`<span class="${i===curPage?'on':''}"></span>`).join('');
+    const ttsRow = !('speechSynthesis' in window) ? '' : (ttsMode
+      ? `<div class="tts-row"><button class="tts-btn stop" id="ttsStop">■ 읽기 정지</button><span class="tts-ing">${ttsMode==='all'?'책 전체를 읽는 중…':'이 화면을 읽는 중…'}</span></div>`
+      : `<div class="tts-row"><button class="tts-btn" id="ttsAll">🔊 전체 읽기</button><button class="tts-btn" id="ttsPage">🔊 이 화면</button></div>`);
 
     sheet.innerHTML=`
       <button class="close-x" id="closeX">✕</button>
@@ -276,6 +284,7 @@
           <div class="vol-tag">${volLabel}</div>
           <div class="dots">${dotsHtml}</div>
         </div>
+        ${ttsRow}
       </div>
       <div class="sheet-body" id="sheetBody"><div class="slide" id="slide">${inner}</div></div>
       <div class="jumpbar">
@@ -294,6 +303,10 @@
     if(jl) jl.addEventListener('click',jumpLast);
     if(jp) jp.addEventListener('click',()=>goPage(curPage-1));
     if(jn) jn.addEventListener('click',()=>goPage(curPage+1));
+    const ta=$('ttsAll'), tp=$('ttsPage'), ts=$('ttsStop');
+    if(ta) ta.addEventListener('click',()=>startTTS('all'));
+    if(tp) tp.addEventListener('click',()=>startTTS('page'));
+    if(ts) ts.addEventListener('click',()=>stopTTS());
     bindReadMemo(b);
     bindSwipe();
   }
@@ -316,8 +329,71 @@
     }
   }
 
-  function goPage(n){
+  // ===== 읽어주기 (iOS 내장 음성 합성) =====
+  function slideTextFor(b,slide){
+    const clean=s=>String(s).replace(/[①-⑳]/g,'').replace(/\s+/g,' ').trim();
+    const items=arr=>arr.map(m=>clean(m[0])+'. '+clean(m[1])).join(' ');
+    if(slide.kind==='chars') return clean(b.charsTitle||'핵심 인물')+'. '+b.chars.map(c=>clean(c[0])+'. '+clean(c[1])).join(' ');
+    if(slide.kind==='plot'){ const p=b.pages[slide.idx]; return clean(p.vol)+'. '+clean(p.t)+'. '+p.ps.map(clean).join(' '); }
+    if(slide.kind==='plotSimple') return '줄거리. '+clean(b.plot||'');
+    if(slide.kind==='bg') return '작가와 시대. '+items(b.bg);
+    if(slide.kind==='symbols') return '상징과 장치. '+items(b.symbols);
+    if(slide.kind==='meaning') return '해석. '+(Array.isArray(b.meaning)?items(b.meaning):clean(b.meaning));
+    return '';
+  }
+  function ttsChunks(text){
+    const parts=text.match(/[^.!?…]+[.!?…]*\s*/g)||[text];
+    const out=[]; let cur='';
+    for(const p of parts){
+      if((cur+p).length>180){ if(cur.trim()) out.push(cur.trim()); cur=p; }
+      else cur+=p;
+    }
+    if(cur.trim()) out.push(cur.trim());
+    return out;
+  }
+  function speakSlide(onDone){
+    const b=curBook; if(!b||!ttsMode) return;
+    let text=slideTextFor(b, slides[curPage]);
+    if(ttsMode==='all' && curPage===0) text=b.title+'. '+b.author+'. '+text;
+    const sess=ttsSession, list=ttsChunks(text); let i=0;
+    const next=()=>{
+      if(sess!==ttsSession || !ttsMode) return;
+      if(i>=list.length){ if(onDone) onDone(); return; }
+      const u=new SpeechSynthesisUtterance(list[i++]);
+      u.lang='ko-KR'; u.rate=1;
+      try{ const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.indexOf('ko')===0); if(v) u.voice=v; }catch(e){}
+      u.onend=next; u.onerror=next;
+      speechSynthesis.speak(u);
+    };
+    next();
+  }
+  function loopRead(){
+    speakSlide(()=>{
+      if(ttsMode==='all' && curPage<slides.length-1){
+        goPage(curPage+1,true);
+        setTimeout(loopRead,340);
+      } else stopTTS();
+    });
+  }
+  function startTTS(mode){
+    if(!('speechSynthesis' in window)) return;
+    stopTTS(true);
+    ttsMode=mode; ttsSession++;
+    const begin=()=>{ renderSheet(); setTimeout(loopMaybe,120); };
+    const loopMaybe=()=>{ if(mode==='all') loopRead(); else speakSlide(()=>stopTTS()); };
+    if(mode==='all' && curPage!==0){ goPage(0,true); setTimeout(begin,320); }
+    else begin();
+  }
+  function stopTTS(silent){
+    ttsSession++;
+    if('speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} }
+    const was=ttsMode; ttsMode=null;
+    if(was && !silent && curBook) renderSheet();
+  }
+
+  function goPage(n,fromTTS){
     if(n<0 || n>=slides.length || n===curPage) return;
+    if(!fromTTS && ttsMode) stopTTS(true);
     const slideEl=$('slide');
     if(slideEl){
       slideEl.style.transition='transform .18s ease, opacity .18s ease';
@@ -368,6 +444,7 @@
   }
 
   function closeBook(){
+    stopTTS(true);
     if(curBook){ progress[curBook.id]=curPage; saveProgress(); }
     overlay.classList.remove('show'); document.body.style.overflow=''; render();
   }
