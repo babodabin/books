@@ -106,6 +106,7 @@
   .saved{font-size:12px; color:#5a8a5a; margin-top:6px; height:14px;}
   .close-x{position:absolute; top:12px; right:16px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,0.06); border:none; font-size:18px; color:#5a4c38; display:flex; align-items:center; justify-content:center; z-index:2;}
   footer{text-align:center; padding:24px 20px 40px; color:#4a3826; font-size:11px; line-height:1.6;}
+  .app-ver{display:inline-block; margin-top:6px; padding:3px 10px; border:1px solid #3a2c1c; border-radius:10px; opacity:.8;}
 .tts-row{display:flex; gap:8px; align-items:center; margin-top:10px;}
   .tts-btn{border:1px solid var(--line); background:var(--paper2); color:inherit; font:inherit; font-size:12.5px; padding:6px 12px; border-radius:14px; -webkit-tap-highlight-color:transparent;}
   .tts-btn.stop{background:#7a3030; color:#fff; border-color:#7a3030;}
@@ -116,7 +117,7 @@
   <header>
     <h1>소형 도서관</h1>
     <div class="sub">Tiny Library</div>
-    <div class="tagline">저작권이 풀린 명작들. 짧게 다시 떠올리기.</div>
+    <div class="tagline">명작을 짧게 다시 떠올리기.</div>
     <div class="filters" id="filters">
       <button class="chip on" data-f="all">전체</button>
       <button class="chip" data-f="세계">세계 명작</button>
@@ -130,8 +131,8 @@
   <div class="shelf-wrap" id="shelfWrap"></div>
 
   <footer>
-    모든 작품은 저작권 보호 기간(작가 사후 70년)이 지난 퍼블릭 도메인입니다.<br>
-    요약·해석은 기억을 돕기 위한 짧은 안내입니다.
+    요약·해석은 기억을 돕기 위해 새로 쓴 짧은 안내이며, 원문은 수록하지 않습니다.<br>
+    <span class="app-ver">소형 도서관 v15</span>
   </footer>
 
   <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -310,10 +311,17 @@
     if(ts) ts.addEventListener('click',()=>stopTTS());
     const tsp=$('ttsSpeed');
     if(tsp) tsp.addEventListener('click',()=>{
-      const steps=[0.7,0.85,1.0,1.15];
-      ttsRate=steps[(steps.indexOf(ttsRate)+1) % steps.length] || 0.85;
+      const steps=[0.5,0.7,0.85,1.0,1.25,1.5];
+      const cur=steps.indexOf(ttsRate);
+      ttsRate=steps[(cur+1) % steps.length];
+      if(!ttsRate) ttsRate=0.85;
       try{ store.set('ttsRate', String(ttsRate)); }catch(e){}
       tsp.textContent=ttsRate.toFixed(2).replace(/0$/,'')+'배속';
+      if(ttsMode){ // 재생 중이면 지금 문장부터 새 속도로 즉시 다시 읽기
+        ttsSession++;
+        try{ speechSynthesis.cancel(); }catch(e){}
+        setTimeout(ttsPlayFrom, 100);
+      }
     });
     bindReadMemo(b);
     bindSwipe();
@@ -359,21 +367,24 @@
     if(cur.trim()) out.push(cur.trim());
     return out;
   }
+  let ttsList=[], ttsIdx=0, ttsDoneCb=null;
   function speakSlide(onDone){
     const b=curBook; if(!b||!ttsMode) return;
     let text=slideTextFor(b, slides[curPage]);
     if(ttsMode==='all' && curPage===0) text=b.title+'. '+b.author+'. '+text;
-    const sess=ttsSession, list=ttsChunks(text); let i=0;
-    const next=()=>{
-      if(sess!==ttsSession || !ttsMode) return;
-      if(i>=list.length){ if(onDone) onDone(); return; }
-      const u=new SpeechSynthesisUtterance(list[i++]);
-      u.lang='ko-KR'; u.rate=ttsRate;
-      try{ const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.indexOf('ko')===0); if(v) u.voice=v; }catch(e){}
-      u.onend=next; u.onerror=next;
-      speechSynthesis.speak(u);
-    };
-    next();
+    ttsList=ttsChunks(text); ttsIdx=0; ttsDoneCb=onDone||null;
+    ttsPlayFrom();
+  }
+  function ttsPlayFrom(){
+    if(!ttsMode) return;
+    if(ttsIdx>=ttsList.length){ const cb=ttsDoneCb; ttsDoneCb=null; if(cb) cb(); return; }
+    const u=new SpeechSynthesisUtterance(ttsList[ttsIdx]);
+    u.lang='ko-KR'; u.rate=ttsRate;
+    try{ const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.indexOf('ko')===0); if(v) u.voice=v; }catch(e){}
+    const mySess=ttsSession;
+    u.onend=()=>{ if(mySess===ttsSession && ttsMode){ ttsIdx++; ttsPlayFrom(); } };
+    u.onerror=u.onend;
+    speechSynthesis.speak(u);
   }
   function loopRead(){
     speakSlide(()=>{
