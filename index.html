@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1a1410">
 <title>소형 도서관</title>
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -155,7 +155,7 @@
 
   <footer>
     요약·해석은 기억을 돕기 위해 새로 쓴 짧은 안내이며, 원문은 수록하지 않습니다.<br>
-    <span class="app-ver">소형 도서관 v18</span>
+    <span class="app-ver">소형 도서관 v19</span>
   </footer>
 
   <div class="book-toast" id="bookToast"></div>
@@ -2828,11 +2828,33 @@ if(typeof module!=='undefined') module.exports=BOOKS;
   async function saveMemos(){ try{ await store.set('memos', JSON.stringify(memos)); }catch(e){} }
   async function saveProgress(){ try{ await store.set('progress', JSON.stringify(progress)); }catch(e){} }
 
+  // 두 손가락 확대/축소 차단
+  ['gesturestart','gesturechange','gestureend'].forEach(ev=>{
+    document.addEventListener(ev, e=>e.preventDefault(), {passive:false});
+  });
+  document.addEventListener('touchmove', e=>{ if(e.touches.length>1) e.preventDefault(); }, {passive:false});
+
+  // 한글 초성 추출 (ㄱㄴㄷ 검색용)
+  const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+  function toCho(s){
+    return String(s||'').split('').map(ch=>{
+      const c=ch.charCodeAt(0);
+      return (c>=0xAC00 && c<=0xD7A3) ? CHO[Math.floor((c-0xAC00)/588)] : ch;
+    }).join('');
+  }
+
   function norm(s){ return String(s||'').normalize('NFKC').toLowerCase().replace(/\s+/g,' '); }
   function matchesSearch(b,q){
     if(!q) return true;
     const hay=norm(JSON.stringify(b));
-    return norm(q).split(' ').filter(Boolean).every(word=>hay.includes(word));
+    const choHay=toCho((b.title||'')+' '+(b.author||''));
+    const choFlat=choHay.replace(/\s+/g,'');
+    return String(q).split(/\s+/).filter(Boolean).every(word=>{
+      if(hay.includes(norm(word))) return true;
+      // 자음만 입력한 경우 제목·작가의 초성과 대조
+      if(/^[\u3131-\u314E]+$/.test(word) && (choFlat.includes(word)||choHay.includes(word))) return true;
+      return false;
+    });
   }
   function filteredBooks(){
     let list=filter==='all' ? BOOKS.slice() : filter==='read' ? BOOKS.filter(b=>readSet.has(b.id)) : BOOKS.filter(b=>b.tag===filter);
@@ -2850,10 +2872,12 @@ if(typeof module!=='undefined') module.exports=BOOKS;
       return;
     }
     if(filter==='all'){
-      renderShelf('문학', BOOKS.filter(b=>b.tag==='문학'));
-      renderShelf('철학·사상', BOOKS.filter(b=>b.tag==='철학·사상'));
-      renderShelf('역사·인류', BOOKS.filter(b=>b.tag==='역사·인류'));
-      renderShelf('사회·과학', BOOKS.filter(b=>b.tag==='사회·과학'));
+      renderLitShelves();
+      shelfIfAny('철학·사상', BOOKS.filter(b=>b.tag==='철학·사상'));
+      shelfIfAny('역사·인류', BOOKS.filter(b=>b.tag==='역사·인류'));
+      shelfIfAny('사회·과학', BOOKS.filter(b=>b.tag==='사회·과학'));
+    } else if(filter==='문학'){
+      renderLitShelves();
     } else if(filter==='read'){
       const list=filteredBooks();
       if(list.length) renderShelf('읽은 책', list);
@@ -2862,6 +2886,12 @@ if(typeof module!=='undefined') module.exports=BOOKS;
       const label=filter;
       renderShelf(label,filteredBooks());
     }
+  }
+  const LIT_SUBS=['세계 고전','한국 고전','동양 고전','현대'];
+  function shelfIfAny(label, list){ if(list.length) renderShelf(label, list); }
+  function renderLitShelves(){
+    LIT_SUBS.forEach(s=>shelfIfAny('문학 · '+s, BOOKS.filter(b=>b.tag==='문학' && b.sub===s)));
+    shelfIfAny('문학 · 기타', BOOKS.filter(b=>b.tag==='문학' && !LIT_SUBS.includes(b.sub||'')));
   }
   function renderShelf(label, books){
     const shelf=document.createElement('div'); shelf.className='shelf';
