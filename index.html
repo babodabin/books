@@ -122,6 +122,112 @@
   .tts-btn{border:1px solid var(--line); background:var(--paper2); color:inherit; font:inherit; font-size:12.5px; padding:6px 12px; border-radius:14px; -webkit-tap-highlight-color:transparent;}
   .tts-btn.stop{background:#7a3030; color:#fff; border-color:#7a3030;}
   .tts-ing{font-size:12px; opacity:.65;}
+
+  /* ===== v21 벽면 책장 ===== */
+  .shelf-wrap{padding:16px 0 22px;}
+  .case{position:relative; margin:0 6px; padding:0 13px; background:#140d07;
+    box-shadow:0 10px 30px rgba(0,0,0,.6);}
+  .case::before,.case::after{content:""; position:absolute; top:0; bottom:0; width:13px; z-index:3;
+    background:linear-gradient(90deg,#3e2614,#7a4e2b 35%,#5c381d 70%,#2e1b0d);}
+  .case::before{left:0; box-shadow:3px 0 6px rgba(0,0,0,.55);}
+  .case::after{right:0; box-shadow:-3px 0 6px rgba(0,0,0,.55);}
+  .crown{height:22px; margin:0 -13px; position:relative; z-index:4;
+    background:linear-gradient(180deg,#9a6a3e 0,#6e4425 30%,#4a2c16 70%,#2e1a0b 100%);
+    border-bottom:3px solid #1c1007; box-shadow:0 5px 10px rgba(0,0,0,.7);}
+  .crown::after{content:""; position:absolute; left:0; right:0; top:6px; height:2px; background:rgba(230,190,120,.22);}
+  .plinth{height:26px; margin:0 -13px; position:relative; z-index:4;
+    background:linear-gradient(180deg,#5c381d,#3e2614 60%,#22130a);}
+  .tier{position:relative;}
+  .row{position:relative; height:172px; overflow:hidden; touch-action:pan-y; cursor:pointer;
+    background:
+      linear-gradient(180deg,rgba(0,0,0,.75) 0,rgba(0,0,0,0) 26px),
+      repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0 3px,rgba(0,0,0,.03) 3px 7px),
+      linear-gradient(180deg,#160e07,#22160c 70%,#2a1b0f);}
+  .row::after{content:""; position:absolute; inset:0; pointer-events:none;
+    box-shadow:inset 10px 0 14px -6px rgba(0,0,0,.8), inset -10px 0 14px -6px rgba(0,0,0,.8);}
+  .strip{position:absolute; left:0; bottom:0; height:100%; display:flex; align-items:flex-end; will-change:transform;}
+  .cycle{display:flex; align-items:flex-end; height:100%; padding-left:3px;}
+  .board{position:relative; height:17px; z-index:2;
+    background:linear-gradient(180deg,#a0703f 0,#7c4f2a 22%,#5e3a1e 70%,#3c2311 100%);
+    box-shadow:0 7px 9px rgba(0,0,0,.65);}
+  .board::before{content:""; position:absolute; left:0; right:0; top:0; height:1px; background:rgba(255,220,160,.35);}
+  .plate{position:absolute; left:50%; top:2px; transform:translateX(-50%); white-space:nowrap;
+    font-family:Georgia,"Apple SD Gothic Neo",serif; font-size:9.5px; font-weight:700; letter-spacing:1.2px;
+    color:#2b1a0b; padding:1px 9px; border-radius:2px;
+    background:linear-gradient(180deg,#ecd08a,#c9a44c 55%,#9b7a32);
+    box-shadow:0 1px 2px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.5);}
+  .plate em{font-style:normal; opacity:.6; margin-left:5px;}
+
+  .tspine{flex:0 0 auto; position:relative; margin-right:1px; overflow:hidden;
+    border-radius:2px 2px 0 0; display:flex; justify-content:center;
+    box-shadow:inset -3px 0 4px rgba(0,0,0,.5), inset 2px 0 2px rgba(255,255,255,.13), 1px 0 1px rgba(0,0,0,.6);}
+  .tspine .ln{position:absolute; left:0; right:0; height:0; border-top:1px solid rgba(214,178,96,.85);}
+  .tspine .pt{position:absolute; left:2px; right:2px; border:1px solid rgba(214,178,96,.7); background:rgba(0,0,0,.28);}
+  .tspine .tt{position:absolute; left:0; right:0; display:flex; justify-content:center; overflow:hidden;}
+  .tspine .tt span{writing-mode:vertical-rl; white-space:nowrap; font-family:Georgia,"Apple SD Gothic Neo",serif;
+    font-size:9.5px; font-weight:700; letter-spacing:.6px; text-shadow:0 1px 1px rgba(0,0,0,.7);}
+  .tspine .rd{position:absolute; top:4px; left:50%; width:5px; height:5px; margin-left:-2.5px; border-radius:50%;
+    background:#7fdca0; box-shadow:0 0 4px #7fdca0; z-index:2;}
+  .bookend{flex:0 0 auto; width:9px; height:74px; margin:0 7px 0 3px; border-radius:2px 2px 0 0;
+    background:linear-gradient(90deg,#6b5323,#d4b467 45%,#8a6a2a);
+    box-shadow:2px 0 4px rgba(0,0,0,.6);}
+
+  /* ===== 칸 확대 화면 ===== */
+  .zoom{position:fixed; inset:0; z-index:80; display:none; flex-direction:column; overflow:hidden;
+    background:#140d07; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom);}
+  .zoom.show{display:flex; animation:zin .22s ease-out;}
+  @keyframes zin{from{opacity:0; transform:scale(.97);}to{opacity:1; transform:none;}}
+  .zoom-top{flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:10px 14px 8px; position:relative; z-index:5;
+    background:linear-gradient(180deg,#241a12,#1a1108);}
+  .zoom-back{border:1px solid #5a4024; background:transparent; color:#e6cf93; font:inherit; font-size:13.5px; font-weight:600;
+    padding:6px 12px; border-radius:16px;}
+  .zoom-name{flex:1; font-family:Georgia,"Apple SD Gothic Neo",serif; font-size:15px; font-weight:700; color:#f1e4c3;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .zoom-cnt{font-size:12px; color:#b39a6a; font-weight:600;}
+  .zframe{flex:1; display:flex; flex-direction:column; min-height:0; margin:0 6px; padding:0 13px; position:relative;}
+  .zframe::before,.zframe::after{content:""; position:absolute; top:0; bottom:0; width:13px; z-index:3;
+    background:linear-gradient(90deg,#3e2614,#7a4e2b 35%,#5c381d 70%,#2e1b0d);}
+  .zframe::before{left:0;} .zframe::after{right:0;}
+  .peek{position:relative; flex:1 1 0; min-height:46px; overflow:hidden; display:flex; flex-direction:column; cursor:pointer;}
+  .peek.up{justify-content:flex-end;}
+  .peek.down{justify-content:flex-start;}
+  .peek .row{flex:0 0 auto; pointer-events:none; filter:brightness(.55) saturate(.8);}
+  .peek .board{flex:0 0 auto;}
+  .peek.empty{cursor:default;}
+  .peek .crown,.peek .plinth{flex:0 0 auto; margin:0 -13px;}
+  .peek .hint{position:absolute; left:50%; transform:translateX(-50%); z-index:4; white-space:nowrap;
+    font-size:11px; font-weight:700; color:#f0dca8; background:rgba(20,13,7,.78); border:1px solid #6e5428;
+    padding:3px 10px; border-radius:11px;}
+  .peek.up .hint{top:8px;} .peek.down .hint{bottom:8px;}
+  .bigrow{flex:0 0 auto; position:relative; overflow:hidden;
+    background:
+      linear-gradient(180deg,rgba(0,0,0,.8) 0,rgba(0,0,0,0) 34px),
+      linear-gradient(180deg,#1a1109,#2a1b0f);}
+  .bigstrip{display:flex; align-items:flex-end; gap:3px; overflow-x:auto; overflow-y:hidden; height:100%;
+    scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+  .bigstrip::-webkit-scrollbar{display:none;}
+  .bspine{flex:0 0 auto; position:relative; scroll-snap-align:center; border-radius:3px 4px 0 0; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; transition:transform .22s ease, filter .22s ease;
+    filter:brightness(.72);
+    box-shadow:inset -5px 0 9px rgba(0,0,0,.45), inset 4px 0 5px rgba(255,255,255,.14), 2px 0 3px rgba(0,0,0,.6);}
+  .bspine.on{transform:translateY(-12px); filter:none;
+    box-shadow:inset -5px 0 9px rgba(0,0,0,.45), inset 4px 0 5px rgba(255,255,255,.14), 0 0 0 1px rgba(214,178,96,.6), 0 6px 18px rgba(0,0,0,.7);}
+  .bspine .bb{position:absolute; left:0; right:0; height:13px; border-top:1.5px solid rgba(214,178,96,.9); border-bottom:1.5px solid rgba(214,178,96,.9); background:rgba(214,178,96,.16);}
+  .bspine .bt{writing-mode:vertical-rl; font-family:Georgia,"Apple SD Gothic Neo",serif; font-weight:700; font-size:15px;
+    color:#f6eed6; letter-spacing:1.5px; text-shadow:0 1px 2px rgba(0,0,0,.65); padding:10px 4px; max-height:58%;
+    overflow:hidden; border:1px solid rgba(214,178,96,.55); border-radius:3px; white-space:nowrap;}
+  .bspine .ba{position:absolute; bottom:34px; left:0; right:0; display:flex; justify-content:center;}
+  .bspine .ba span{writing-mode:vertical-rl; font-size:9.5px; color:rgba(246,238,214,.75); letter-spacing:1px; white-space:nowrap; max-height:70px; overflow:hidden;}
+  .bspine .rd{position:absolute; top:6px; right:6px; width:8px; height:8px; border-radius:50%; background:#7fdca0; box-shadow:0 0 6px #7fdca0;}
+  .zinfo{flex:0 0 auto; padding:14px 18px 12px; background:linear-gradient(180deg,#2a1b0f,#1d1309); position:relative; z-index:2;
+    border-top:1px solid #3a2716;}
+  .zi-title{font-family:Georgia,"Apple SD Gothic Neo",serif; font-size:19px; font-weight:700; color:#f4e8c8; line-height:1.25;}
+  .zi-meta{font-size:12px; color:#b39a6a; margin-top:3px;}
+  .zi-one{font-size:13.5px; line-height:1.55; color:#d9ccaf; margin-top:8px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;}
+  .zi-row{display:flex; align-items:center; gap:8px; margin-top:11px;}
+  .zi-open{border:0; border-radius:10px; padding:9px 16px; font:inherit; font-size:14px; font-weight:700; color:#2a1a0b;
+    background:linear-gradient(180deg,#ecd08a,#c9a44c);}
+  .zi-read{font-size:11.5px; font-weight:700; color:#87d3a0; border:1px solid #3f6b4c; border-radius:10px; padding:2px 8px;}
 </style>
 </head>
 <body>
@@ -152,10 +258,11 @@
   </header>
 
   <div class="shelf-wrap" id="shelfWrap"></div>
+  <div class="zoom" id="zoom"></div>
 
   <footer>
     요약·해석은 기억을 돕기 위해 새로 쓴 짧은 안내이며, 원문은 수록하지 않습니다.<br>
-    <span class="app-ver">소형 도서관 v20</span>
+    <span class="app-ver">소형 도서관 v21</span>
   </footer>
 
   <div class="book-toast" id="bookToast"></div>
@@ -3225,7 +3332,14 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     return list;
   }
   function emptyMessage(msg){ wrap.innerHTML='<div style="padding:50px 20px;text-align:center;color:#6a5a44;font-size:14px;line-height:1.7;">'+msg+'</div>'; }
+  let shelvesData=[];
   function render(){
+    shelvesData=[]; stopAllInertia();
+    renderInner();
+    requestAnimationFrame(setupRows);
+    if(zoomIdx>=0) refreshZoom();
+  }
+  function renderInner(){
     wrap.innerHTML='';
     $('tagline').textContent='책 '+BOOKS.length+'권을 이야기·개념·해석 중심으로.';
     if(searchQuery){
@@ -3256,13 +3370,233 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     LIT_SUBS.forEach(s=>shelfIfAny('문학 · '+s, BOOKS.filter(b=>b.tag==='문학' && b.sub===s)));
     shelfIfAny('문학 · 기타', BOOKS.filter(b=>b.tag==='문학' && !LIT_SUBS.includes(b.sub||'')));
   }
+  // ===== v21 벽면 책장 =====
+  function hsh(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+  function rnd(id,k){ return (hsh(id+'|'+k)%1000)/1000; }
+  function dims(b){
+    return { w:21+Math.round(rnd(b.id,'w')*9), h:124+Math.round(rnd(b.id,'h')*38),
+             style:Math.floor(rnd(b.id,'s')*4), tone:Math.round((rnd(b.id,'t')-.5)*20),
+             ink:rnd(b.id,'i')<.35 ? '#e8c877' : '#f3e6c2' };
+  }
+  function spineBg(c,tone){
+    const base=shade(c,tone);
+    return `linear-gradient(90deg, ${shade(base,-16)}, ${base} 28%, ${shade(base,10)} 62%, ${shade(base,-22)})`;
+  }
+  function getCase(){
+    let cs=wrap.querySelector('.case');
+    if(!cs){
+      cs=document.createElement('div'); cs.className='case';
+      cs.innerHTML='<div class="crown"></div><div class="tiers"></div><div class="plinth"></div>';
+      wrap.appendChild(cs);
+    }
+    return cs.querySelector('.tiers');
+  }
+  function thinSpine(b){
+    const d=dims(b), sp=document.createElement('div');
+    sp.className='tspine'; sp.dataset.id=b.id;
+    sp.style.width=d.w+'px'; sp.style.height=d.h+'px'; sp.style.background=spineBg(b.spineColor,d.tone);
+    let deco='';
+    if(d.style===0) deco=`<i class="ln" style="top:10px"></i><i class="ln" style="top:14px"></i><i class="ln" style="bottom:12px"></i><i class="ln" style="bottom:16px"></i>`;
+    else if(d.style===1) deco=`<i class="ln" style="top:8px"></i><i class="ln" style="top:11px"></i><i class="ln" style="top:14px"></i><i class="pt" style="top:${Math.round(d.h*.2)}px;height:${Math.round(d.h*.55)}px"></i>`;
+    else if(d.style===2) deco=`<i class="pt" style="top:12px;height:${Math.round(d.h*.42)}px"></i><i class="ln" style="bottom:10px"></i>`;
+    else deco=`<i class="ln" style="top:9px"></i><i class="ln" style="bottom:9px"></i><i class="ln" style="bottom:13px"></i>`;
+    const tTop=d.style===2?16:Math.round(d.h*.22), tH=Math.round(d.h*.5);
+    sp.innerHTML=deco+`<div class="tt" style="top:${tTop}px;height:${tH}px"><span style="color:${d.ink}">${b.title}</span></div>`+(readSet.has(b.id)?'<i class="rd"></i>':'');
+    return sp;
+  }
+  function makeRow(books){
+    const row=document.createElement('div'); row.className='row';
+    const strip=document.createElement('div'); strip.className='strip';
+    const cyc=document.createElement('div'); cyc.className='cycle';
+    books.forEach(b=>cyc.appendChild(thinSpine(b)));
+    const be=document.createElement('div'); be.className='bookend'; cyc.appendChild(be);
+    strip.appendChild(cyc); row.appendChild(strip);
+    return row;
+  }
+  function makeBoard(label,count){
+    const bd=document.createElement('div'); bd.className='board';
+    bd.innerHTML=`<span class="plate">${label}<em>${count}</em></span>`;
+    return bd;
+  }
   function renderShelf(label, books){
-    const shelf=document.createElement('div'); shelf.className='shelf';
-    const lab=document.createElement('div'); lab.className='shelf-label'; lab.textContent=label;
-    shelf.appendChild(lab);
-    const row=document.createElement('div'); row.className='books';
-    books.forEach(b=>row.appendChild(makeSpine(b)));
-    shelf.appendChild(row); wrap.appendChild(shelf);
+    const idx=shelvesData.length;
+    shelvesData.push({label, books});
+    const tier=document.createElement('div'); tier.className='tier'; tier.dataset.idx=idx;
+    const row=makeRow(books); row.dataset.idx=idx;
+    tier.appendChild(row); tier.appendChild(makeBoard(label,books.length));
+    getCase().appendChild(tier);
+  }
+
+  // 각 칸: 넘치면 무한 회전, 아니면 왼쪽부터 꽂힌 채 빈자리
+  const loops=[];
+  function stopAllInertia(){ loops.forEach(l=>{ cancelAnimationFrame(l.raf); }); loops.length=0; }
+  function setupRows(){
+    wrap.querySelectorAll('.row').forEach(row=>{
+      const strip=row.querySelector('.strip'), cyc=strip.querySelector('.cycle');
+      const L={row, strip, cyc, W:cyc.offsetWidth, loop:false, off:0, v:0, raf:0};
+      if(L.W > row.clientWidth+2){
+        L.loop=true;
+        const copies=Math.ceil(row.clientWidth/L.W)+2;
+        for(let i=1;i<copies;i++) strip.appendChild(cyc.cloneNode(true));
+      }
+      loops.push(L);
+      bindRow(L);
+    });
+  }
+  function applyOff(L){
+    const m=((L.off % L.W)+L.W)%L.W;
+    L.strip.style.transform=`translate3d(${-m}px,0,0)`;
+  }
+  function bindRow(L){
+    const row=L.row;
+    let x0=0,y0=0,off0=0,lock=null,pid=null,samples=[],dragged=false,lp=null,lpFired=false;
+    row.addEventListener('pointerdown',e=>{
+      cancelAnimationFrame(L.raf); L.v=0;
+      x0=e.clientX; y0=e.clientY; off0=L.off; lock=null; pid=e.pointerId; samples=[[performance.now(),L.off]];
+      dragged=false; lpFired=false;
+      const sp=e.target.closest('.tspine');
+      clearTimeout(lp);
+      if(sp){ lp=setTimeout(()=>{ lpFired=true; const b=BOOKS.find(x=>x.id===sp.dataset.id); if(b) showBookToast(b); },520); }
+    });
+    row.addEventListener('pointermove',e=>{
+      if(e.pointerId!==pid) return;
+      const dx=e.clientX-x0, dy=e.clientY-y0;
+      if(lock===null && (Math.abs(dx)>7||Math.abs(dy)>7)){
+        lock=Math.abs(dx)>Math.abs(dy)?'x':'y'; clearTimeout(lp);
+        if(lock==='x'){ dragged=true; try{row.setPointerCapture(pid);}catch(_){} }
+      }
+      if(lock==='x' && L.loop){
+        L.off=off0-dx; applyOff(L);
+        const t=performance.now(); samples.push([t,L.off]); if(samples.length>6) samples.shift();
+      }
+    });
+    const end=e=>{
+      if(e.pointerId!==pid) return; pid=null; clearTimeout(lp);
+      if(lock==='x' && L.loop){
+        const a=samples[0], z=samples[samples.length-1], dt=z[0]-a[0];
+        L.v = dt>0 ? (z[1]-a[1])/dt : 0;
+        if(performance.now()-z[0]>80) L.v=0;
+        let last=performance.now();
+        const step=t=>{
+          const dt=Math.min(40,t-last); last=t;
+          L.off+=L.v*dt; L.v*=Math.pow(0.94,dt/16); applyOff(L);
+          if(Math.abs(L.v)>0.02) L.raf=requestAnimationFrame(step);
+        };
+        L.raf=requestAnimationFrame(step);
+      }
+    };
+    row.addEventListener('pointerup',end);
+    row.addEventListener('pointercancel',e=>{ clearTimeout(lp); pid=null; });
+    row.addEventListener('contextmenu',e=>e.preventDefault());
+    row.addEventListener('click',e=>{
+      if(dragged||lpFired){ dragged=false; lpFired=false; return; }
+      const sp=e.target.closest('.tspine');
+      openZoom(+row.dataset.idx, sp?sp.dataset.id:null);
+    });
+  }
+  let resizeT=null;
+  window.addEventListener('resize',()=>{ clearTimeout(resizeT); resizeT=setTimeout(render,200); });
+
+  // ===== 칸 확대 화면 =====
+  const zoom=$('zoom');
+  let zoomIdx=-1, zoomFocus=null;
+  function bigH(){ return Math.max(210, Math.min(320, Math.round(window.innerHeight*0.38))); }
+  function bigSpine(b,H){
+    const d=dims(b), sp=document.createElement('div');
+    sp.className='bspine'; sp.dataset.id=b.id;
+    const w=Math.round(d.w*2.4), h=Math.round(H*(d.h/162));
+    sp.style.width=w+'px'; sp.style.height=h+'px'; sp.style.background=spineBg(b.spineColor,d.tone);
+    sp.innerHTML=`<i class="bb" style="top:12px"></i><div class="bt" style="color:${d.ink}">${b.title}</div><i class="bb" style="bottom:12px"></i>`
+      +(readSet.has(b.id)?'<i class="rd"></i>':'');
+    return sp;
+  }
+  function peekBlock(idx,dir){
+    const p=document.createElement('div'); p.className='peek '+dir;
+    const s=shelvesData[idx];
+    if(!s){
+      p.classList.add('empty');
+      const cap=document.createElement('div'); cap.className=dir==='up'?'crown':'plinth';
+      p.appendChild(cap); return p;
+    }
+    const row=makeRow(s.books); row.style.height='172px';
+    if(dir==='up'){ p.appendChild(row); p.appendChild(makeBoard(s.label,s.books.length)); }
+    else { p.appendChild(row); }
+    const hint=document.createElement('div'); hint.className='hint';
+    hint.textContent=(dir==='up'?'▲ ':'▼ ')+s.label;
+    p.appendChild(hint);
+    p.addEventListener('click',()=>renderZoom(idx,null));
+    return p;
+  }
+  function openZoom(idx,focusId){
+    if(!shelvesData[idx]) return;
+    zoom.classList.add('show'); document.body.style.overflow='hidden';
+    renderZoom(idx,focusId);
+  }
+  function closeZoom(){
+    zoomIdx=-1; zoomFocus=null; zoom.classList.remove('show'); zoom.innerHTML='';
+    document.body.style.overflow='';
+  }
+  function refreshZoom(){
+    if(zoomIdx<0) return;
+    if(!shelvesData[zoomIdx]){ closeZoom(); return; }
+    renderZoom(zoomIdx, zoomFocus);
+  }
+  function renderZoom(idx,focusId){
+    const s=shelvesData[idx]; if(!s) return;
+    zoomIdx=idx;
+    const H=bigH();
+    zoom.innerHTML='';
+    const top=document.createElement('div'); top.className='zoom-top';
+    top.innerHTML=`<button class="zoom-back">‹ 책장</button><div class="zoom-name">${s.label}</div><div class="zoom-cnt"></div>`;
+    top.querySelector('.zoom-back').addEventListener('click',closeZoom);
+    zoom.appendChild(top);
+    const fr=document.createElement('div'); fr.className='zframe';
+    fr.appendChild(peekBlock(idx-1,'up'));
+    const big=document.createElement('div'); big.className='bigrow'; big.style.height=(H+26)+'px';
+    const strip=document.createElement('div'); strip.className='bigstrip';
+    const widths=s.books.map(b=>Math.round(dims(b).w*2.4));
+    strip.style.paddingLeft=`calc(50% - ${Math.round(widths[0]/2)}px)`;
+    strip.style.paddingRight=`calc(50% - ${Math.round(widths[widths.length-1]/2)}px)`;
+    s.books.forEach(b=>strip.appendChild(bigSpine(b,H)));
+    big.appendChild(strip);
+    fr.appendChild(big);
+    fr.appendChild(makeBoard(s.label,s.books.length));
+    const info=document.createElement('div'); info.className='zinfo';
+    fr.appendChild(info);
+    fr.appendChild(peekBlock(idx+1,'down'));
+    zoom.appendChild(fr);
+
+    const spines=[...strip.children];
+    let cur=-1;
+    function setOn(i){
+      if(i===cur) return; cur=i;
+      spines.forEach((el,j)=>el.classList.toggle('on',j===i));
+      const b=s.books[i]; zoomFocus=b.id;
+      top.querySelector('.zoom-cnt').textContent=(i+1)+' / '+s.books.length;
+      info.innerHTML=`<div class="zi-title">${b.title}</div>`
+        +`<div class="zi-meta">${[b.author,b.year,b.origin].filter(Boolean).join(' · ')}</div>`
+        +(b.oneLine?`<div class="zi-one">${b.oneLine}</div>`:'')
+        +`<div class="zi-row"><button class="zi-open">펼쳐 보기 →</button>${readSet.has(b.id)?'<span class="zi-read">읽음</span>':''}</div>`;
+      info.querySelector('.zi-open').addEventListener('click',()=>openBook(b));
+    }
+    function nearest(){
+      const r=strip.getBoundingClientRect(), cx=r.left+r.width/2;
+      let best=0,bd=1e9;
+      spines.forEach((el,j)=>{ const q=el.getBoundingClientRect(); const d=Math.abs(q.left+q.width/2-cx); if(d<bd){bd=d;best=j;} });
+      return best;
+    }
+    let ticking=false;
+    strip.addEventListener('scroll',()=>{ if(ticking) return; ticking=true; requestAnimationFrame(()=>{ ticking=false; setOn(nearest()); }); },{passive:true});
+    spines.forEach((el,j)=>el.addEventListener('click',()=>{
+      if(j===cur) openBook(s.books[j]);
+      else el.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+    }));
+    let start=Math.max(0, s.books.findIndex(b=>b.id===focusId));
+    requestAnimationFrame(()=>{
+      const el=spines[start];
+      strip.scrollLeft = el.offsetLeft + el.offsetWidth/2 - strip.clientWidth/2;
+      setOn(start);
+    });
   }
   function showBookToast(b){
     clearTimeout(toastTimer);
@@ -3555,7 +3889,7 @@ if(typeof module!=='undefined') module.exports=BOOKS;
   function closeBook(){
     stopTTS(true);
     if(curBook){ progress[curBook.id]=curPage; saveProgress(); }
-    overlay.classList.remove('show'); document.body.style.overflow=''; render();
+    overlay.classList.remove('show'); document.body.style.overflow= zoomIdx>=0 ? 'hidden' : ''; render();
   }
   overlay.addEventListener('click',e=>{ if(e.target===overlay) closeBook(); });
 
