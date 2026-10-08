@@ -228,31 +228,44 @@
   .zi-open{border:0; border-radius:10px; padding:9px 16px; font:inherit; font-size:14px; font-weight:700; color:#2a1a0b;
     background:linear-gradient(180deg,#ecd08a,#c9a44c);}
   .zi-read{font-size:11.5px; font-weight:700; color:#87d3a0; border:1px solid #3f6b4c; border-radius:10px; padding:2px 8px;}
+
+  /* ===== v22 ===== */
+  header.hdr{padding:10px 12px 10px; position:sticky; top:0;}
+  header.hdr .search-row{margin-top:0; align-items:center;}
+  .gear{flex:0 0 auto; width:36px; height:36px; border-radius:10px; border:1px solid #4a3826; background:#211810;
+    color:#c9a44c; font-size:17px; line-height:1; display:flex; align-items:center; justify-content:center;}
+  .gear.on{background:#3a2a19;}
+  .menu{display:none; position:absolute; right:12px; top:52px; z-index:30; min-width:178px; padding:6px;
+    background:#2a1d12; border:1px solid #5a4024; border-radius:12px; box-shadow:0 10px 26px rgba(0,0,0,.6);}
+  .menu.show{display:block;}
+  .menu-item{display:block; width:100%; text-align:left; border:0; background:transparent; color:#eadcb8;
+    font:inherit; font-size:14px; padding:10px 12px; border-radius:8px;}
+  .menu-item:active{background:#3a2a19;}
+  .menu-item.on::after{content:" ✓"; color:#87d3a0; font-weight:700;}
+  .menu-foot{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 12px 4px; border-top:1px solid #3e2c1a; margin-top:4px;}
+  .menu-foot .tool-status{flex:1; min-height:14px;}
+  .menu-ver{font-size:11px; color:#8a7a5c;}
+  .shelf-wrap{padding:8px 0 10px;}
+  .zframe.slide-up{animation:zup .28s cubic-bezier(.2,.7,.3,1);}
+  .zframe.slide-down{animation:zdown .28s cubic-bezier(.2,.7,.3,1);}
+  @keyframes zup{from{transform:translateY(60%); opacity:.2;}to{transform:none; opacity:1;}}
+  @keyframes zdown{from{transform:translateY(-60%); opacity:.2;}to{transform:none; opacity:1;}}
 </style>
 </head>
 <body>
-  <header>
-    <h1>소형 도서관</h1>
-    <div class="sub">Tiny Library</div>
-    <div class="tagline" id="tagline">책을 짧게 다시 떠올리기.</div>
+  <header class="hdr">
     <div class="search-row">
       <div class="search-box">
         <input class="search-input" id="searchInput" type="search" placeholder="제목·작가·개념·내용 검색" autocomplete="off">
         <button class="search-clear" id="searchClear" aria-label="검색 지우기">×</button>
       </div>
+      <button class="gear" id="gearBtn" aria-label="설정">⚙︎</button>
     </div>
-    <div class="filters" id="filters">
-      <button class="chip on" data-f="all">전체</button>
-      <button class="chip" data-f="문학">문학</button>
-      <button class="chip" data-f="철학·사상">철학·사상</button>
-      <button class="chip" data-f="역사·인류">역사·인류</button>
-      <button class="chip" data-f="사회·과학">사회·과학</button>
-      <button class="chip" data-f="read">읽음</button>
-    </div>
-    <div class="record-tools">
-      <button class="tool-btn" id="backupBtn">기록 백업</button>
-      <button class="tool-btn" id="restoreBtn">기록 복원</button>
-      <span class="tool-status" id="toolStatus"></span>
+    <div class="menu" id="menu">
+      <button class="menu-item" id="backupBtn">기록 백업</button>
+      <button class="menu-item" id="restoreBtn">기록 복원</button>
+      <button class="menu-item" id="readOnlyBtn">읽은 책만 보기</button>
+      <div class="menu-foot"><span class="tool-status" id="toolStatus"></span><span class="menu-ver">v22</span></div>
       <input id="restoreFile" type="file" accept="application/json,.json" hidden>
     </div>
   </header>
@@ -262,7 +275,7 @@
 
   <footer>
     요약·해석은 기억을 돕기 위해 새로 쓴 짧은 안내이며, 원문은 수록하지 않습니다.<br>
-    <span class="app-ver">소형 도서관 v21</span>
+    <span class="app-ver">소형 도서관 v22</span>
   </footer>
 
   <div class="book-toast" id="bookToast"></div>
@@ -3336,12 +3349,12 @@ if(typeof module!=='undefined') module.exports=BOOKS;
   function render(){
     shelvesData=[]; stopAllInertia();
     renderInner();
+    buildCase();
     requestAnimationFrame(setupRows);
     if(zoomIdx>=0) refreshZoom();
   }
   function renderInner(){
     wrap.innerHTML='';
-    $('tagline').textContent='책 '+BOOKS.length+'권을 이야기·개념·해석 중심으로.';
     if(searchQuery){
       const list=filteredBooks();
       if(list.length) renderShelf('검색 결과 · '+list.length+'권',list);
@@ -3391,8 +3404,11 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     }
     return cs.querySelector('.tiers');
   }
-  function thinSpine(b){
-    const d=dims(b), sp=document.createElement('div');
+  let mainScale=1;
+  function thinSpine(b,sc){
+    sc=sc||1;
+    const d0=dims(b), sp=document.createElement('div');
+    const d=Object.assign({},d0,{w:Math.max(9,Math.round(d0.w*Math.max(.55,sc))), h:Math.round(d0.h*sc)});
     sp.className='tspine'; sp.dataset.id=b.id;
     sp.style.width=d.w+'px'; sp.style.height=d.h+'px'; sp.style.background=spineBg(b.spineColor,d.tone);
     let deco='';
@@ -3401,15 +3417,19 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     else if(d.style===2) deco=`<i class="pt" style="top:12px;height:${Math.round(d.h*.42)}px"></i><i class="ln" style="bottom:10px"></i>`;
     else deco=`<i class="ln" style="top:9px"></i><i class="ln" style="bottom:9px"></i><i class="ln" style="bottom:13px"></i>`;
     const tTop=d.style===2?16:Math.round(d.h*.22), tH=Math.round(d.h*.5);
-    sp.innerHTML=deco+`<div class="tt" style="top:${tTop}px;height:${tH}px"><span style="color:${d.ink}">${b.title}</span></div>`+(readSet.has(b.id)?'<i class="rd"></i>':'');
+    const fs=Math.max(6.5, Math.min(9.5, d.w*0.42));
+    sp.innerHTML=deco+`<div class="tt" style="top:${tTop}px;height:${tH}px"><span style="color:${d.ink};font-size:${fs}px">${b.title}</span></div>`+(readSet.has(b.id)?'<i class="rd"></i>':'');
     return sp;
   }
-  function makeRow(books){
+  function makeRow(books,sc,rowH){
     const row=document.createElement('div'); row.className='row';
+    if(rowH) row.style.height=rowH+'px';
     const strip=document.createElement('div'); strip.className='strip';
     const cyc=document.createElement('div'); cyc.className='cycle';
-    books.forEach(b=>cyc.appendChild(thinSpine(b)));
-    const be=document.createElement('div'); be.className='bookend'; cyc.appendChild(be);
+    books.forEach(b=>cyc.appendChild(thinSpine(b,sc)));
+    const be=document.createElement('div'); be.className='bookend';
+    if(sc&&sc<1){ be.style.height=Math.round(74*sc)+'px'; be.style.width=Math.max(5,Math.round(9*sc))+'px'; }
+    cyc.appendChild(be);
     strip.appendChild(cyc); row.appendChild(strip);
     return row;
   }
@@ -3419,12 +3439,26 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     return bd;
   }
   function renderShelf(label, books){
-    const idx=shelvesData.length;
     shelvesData.push({label, books});
-    const tier=document.createElement('div'); tier.className='tier'; tier.dataset.idx=idx;
-    const row=makeRow(books); row.dataset.idx=idx;
-    tier.appendChild(row); tier.appendChild(makeBoard(label,books.length));
-    getCase().appendChild(tier);
+  }
+  function buildCase(){
+    if(!shelvesData.length) return;
+    // 책장 전체가 한 화면에 들어가도록 칸 높이를 맞춤
+    const hdr=document.querySelector('header');
+    const avail=window.innerHeight-(hdr?hdr.offsetHeight:0)-8-22-26-14;
+    const tierH=Math.max(74, Math.min(189, Math.floor(avail/shelvesData.length)));
+    const BOARD=tierH<110?13:17;
+    const rowH=tierH-BOARD;
+    mainScale=Math.min(1,(rowH-8)/164);
+    const tiers=getCase();
+    shelvesData.forEach((s,idx)=>{
+      const tier=document.createElement('div'); tier.className='tier'; tier.dataset.idx=idx;
+      const row=makeRow(s.books,mainScale,rowH); row.dataset.idx=idx;
+      const bd=makeBoard(s.label,s.books.length); bd.style.height=BOARD+'px';
+      if(BOARD<17) bd.querySelector('.plate').style.cssText='top:1.5px;font-size:8.5px;padding:0 8px;';
+      tier.appendChild(row); tier.appendChild(bd);
+      tiers.appendChild(tier);
+    });
   }
 
   // 각 칸: 넘치면 무한 회전, 아니면 왼쪽부터 꽂힌 채 빈자리
@@ -3518,15 +3552,44 @@ if(typeof module!=='undefined') module.exports=BOOKS;
       const cap=document.createElement('div'); cap.className=dir==='up'?'crown':'plinth';
       p.appendChild(cap); return p;
     }
-    const row=makeRow(s.books); row.style.height='172px';
+    const row=makeRow(s.books,1,172);
     if(dir==='up'){ p.appendChild(row); p.appendChild(makeBoard(s.label,s.books.length)); }
     else { p.appendChild(row); }
     const hint=document.createElement('div'); hint.className='hint';
     hint.textContent=(dir==='up'?'▲ ':'▼ ')+s.label;
     p.appendChild(hint);
-    p.addEventListener('click',()=>renderZoom(idx,null));
+    p.addEventListener('click',()=>{ zDir=dir==='up'?'slide-down':'slide-up'; renderZoom(idx,null); });
     return p;
   }
+  let zDir='';
+  function goShelf(d){
+    const n=zoomIdx+d;
+    if(!shelvesData[n]) return;
+    zDir=d>0?'slide-up':'slide-down';
+    renderZoom(n,null);
+  }
+  (function(){
+    let sx=0,sy=0,st=0,ok=false,lk=null;
+    zoom.addEventListener('touchstart',e=>{
+      if(e.touches.length!==1){ ok=false; return; }
+      ok=!overlay.classList.contains('show'); lk=null;
+      sx=e.touches[0].clientX; sy=e.touches[0].clientY; st=Date.now();
+    },{passive:true});
+    zoom.addEventListener('touchmove',e=>{
+      if(!ok) return;
+      const t=e.touches[0], dx=t.clientX-sx, dy=t.clientY-sy;
+      if(lk===null && (Math.abs(dx)>6||Math.abs(dy)>6)) lk=Math.abs(dy)>Math.abs(dx)?'y':'x';
+      if(lk==='y') e.preventDefault();   // 세로로 쓸 때만 막고, 가로 넘기기는 그대로
+    },{passive:false});
+    zoom.addEventListener('touchend',e=>{
+      if(!ok) return; ok=false;
+      if(lk!=='y') return;
+      const t=e.changedTouches[0], dx=t.clientX-sx, dy=t.clientY-sy;
+      if(Math.abs(dy)>45 && Math.abs(dy)>Math.abs(dx)*1.3 && Date.now()-st<900){
+        goShelf(dy<0?-1:1);   // 아래에서 위로 쓸면 윗칸, 위에서 아래로 쓸면 아랫칸 (화면 어디서든)
+      }
+    },{passive:true});
+  })();
   function openZoom(idx,focusId){
     if(!shelvesData[idx]) return;
     zoom.classList.add('show'); document.body.style.overflow='hidden';
@@ -3565,6 +3628,7 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     fr.appendChild(info);
     fr.appendChild(peekBlock(idx+1,'down'));
     zoom.appendChild(fr);
+    if(zDir){ fr.classList.add(zDir); zDir=''; }
 
     const spines=[...strip.children];
     let cur=-1;
@@ -3923,11 +3987,20 @@ if(typeof module!=='undefined') module.exports=BOOKS;
   $('restoreBtn').addEventListener('click',()=>$('restoreFile').click());
   $('restoreFile').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) restoreRecords(f); e.target.value=''; });
 
-  document.querySelectorAll('.chip').forEach(c=>{
-    c.addEventListener('click',()=>{
-      document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
-      c.classList.add('on'); filter=c.dataset.f; render();
-    });
+  const menu=$('menu'), gear=$('gearBtn');
+  function setMenu(open){ menu.classList.toggle('show',open); gear.classList.toggle('on',open); }
+  gear.addEventListener('click',e=>{ e.stopPropagation(); setMenu(!menu.classList.contains('show')); });
+  menu.addEventListener('click',e=>e.stopPropagation());
+  // 메뉴가 열려 있을 때 바깥을 누르면 메뉴만 닫고, 아래 책장은 반응하지 않게
+  document.addEventListener('click',e=>{
+    if(menu.classList.contains('show') && !menu.contains(e.target) && !gear.contains(e.target)){
+      setMenu(false); e.stopPropagation(); e.preventDefault();
+    }
+  },true);
+  $('readOnlyBtn').addEventListener('click',()=>{
+    filter = filter==='read' ? 'all' : 'read';
+    $('readOnlyBtn').classList.toggle('on', filter==='read');
+    setMenu(false); render();
   });
 
   (async()=>{ await loadState(); render(); })();
