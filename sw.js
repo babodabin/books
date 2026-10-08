@@ -1,5 +1,5 @@
-// 소형 도서관 v22 — 오프라인 캐시
-const CACHE = 'library-v22';
+// 소형 도서관 v23 — 오프라인 캐시
+const CACHE = 'library-v23';
 const CORE = ['./', './index.html', './books.js', './manifest.json'];
 const OPTIONAL = ['./icon-180.png', './icon-192.png', './icon-512.png'];
 
