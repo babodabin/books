@@ -1,6 +1,6 @@
-// 소형 도서관 v23 — 오프라인 캐시
-const CACHE = 'library-v23';
-const CORE = ['./', './index.html', './books.js', './manifest.json'];
+// 소형 도서관 v24 — 오프라인 캐시
+const CACHE = 'library-v24';
+const CORE = ['./', './index.html', './manifest.json'];
 const OPTIONAL = ['./icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', event => {
