@@ -250,6 +250,9 @@
   .zframe.slide-down{animation:zdown .28s cubic-bezier(.2,.7,.3,1);}
   @keyframes zup{from{transform:translateY(60%); opacity:.2;}to{transform:none; opacity:1;}}
   @keyframes zdown{from{transform:translateY(-60%); opacity:.2;}to{transform:none; opacity:1;}}
+  .tspine .tt.fit{align-items:center;}
+  .tspine .tt.fit span{display:inline-block; line-height:1.06; letter-spacing:0; word-break:break-all;}
+  .tspine .rd{top:1px; width:4px; height:4px; margin-left:-2px;}
 </style>
 </head>
 <body>
@@ -265,7 +268,7 @@
       <button class="menu-item" id="backupBtn">기록 백업</button>
       <button class="menu-item" id="restoreBtn">기록 복원</button>
       <button class="menu-item" id="readOnlyBtn">읽은 책만 보기</button>
-      <div class="menu-foot"><span class="tool-status" id="toolStatus"></span><span class="menu-ver">v24</span></div>
+      <div class="menu-foot"><span class="tool-status" id="toolStatus"></span><span class="menu-ver">v25</span></div>
       <input id="restoreFile" type="file" accept="application/json,.json" hidden>
     </div>
   </header>
@@ -275,7 +278,7 @@
 
   <footer>
     요약·해석은 기억을 돕기 위해 새로 쓴 짧은 안내이며, 원문은 수록하지 않습니다.<br>
-    <span class="app-ver">소형 도서관 v24</span>
+    <span class="app-ver">소형 도서관 v25</span>
   </footer>
 
   <div class="book-toast" id="bookToast"></div>
@@ -3790,6 +3793,14 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     const d=Object.assign({},d0,{w:Math.max(9,Math.round(d0.w*Math.max(.55,sc))), h:Math.round(d0.h*sc)});
     sp.className='tspine'; sp.dataset.id=b.id;
     sp.style.width=d.w+'px'; sp.style.height=d.h+'px'; sp.style.background=spineBg(b.spineColor,d.tone);
+    if(sc<1){
+      // 줄인 책장: 제목 칸을 책등 전체로 넓히고, 글자 크기는 화면에 붙인 뒤 fitTitles()가 맞춘다
+      const two=d.style===0||d.style===1;
+      const deco=`<i class="ln" style="top:3px"></i>${two?'<i class="ln" style="top:5px"></i>':''}<i class="ln" style="bottom:3px"></i>${two?'<i class="ln" style="bottom:5px"></i>':''}`;
+      const pad=two?8:6;
+      sp.innerHTML=deco+`<div class="tt fit" style="top:${pad}px;height:${d.h-pad*2}px"><span style="color:${d.ink}">${b.title}</span></div>`+(readSet.has(b.id)?'<i class="rd"></i>':'');
+      return sp;
+    }
     let deco='';
     if(d.style===0) deco=`<i class="ln" style="top:10px"></i><i class="ln" style="top:14px"></i><i class="ln" style="bottom:12px"></i><i class="ln" style="bottom:16px"></i>`;
     else if(d.style===1) deco=`<i class="ln" style="top:8px"></i><i class="ln" style="top:11px"></i><i class="ln" style="top:14px"></i><i class="pt" style="top:${Math.round(d.h*.2)}px;height:${Math.round(d.h*.55)}px"></i>`;
@@ -3843,7 +3854,25 @@ if(typeof module!=='undefined') module.exports=BOOKS;
   // 각 칸: 넘치면 무한 회전, 아니면 왼쪽부터 꽂힌 채 빈자리
   const loops=[];
   function stopAllInertia(){ loops.forEach(l=>{ cancelAnimationFrame(l.raf); }); loops.length=0; }
+  function fitTitles(){
+    // 제목이 잘리지 않을 때까지 글자를 줄인다. 한 줄로 너무 작아지면 두 줄로 나눠 담는다.
+    wrap.querySelectorAll('.tt.fit').forEach(tt=>{
+      const sp=tt.firstElementChild, W=tt.clientWidth-1, H=tt.clientHeight;
+      const fits=()=>sp.offsetHeight<=H && sp.scrollHeight<=H+0.5 && sp.offsetWidth<=W;
+      let f=Math.min(9.5, W*0.62);
+      sp.style.whiteSpace='nowrap'; sp.style.maxHeight='none';
+      while(f>=6){ sp.style.fontSize=f+'px'; if(fits()) return; f-=0.5; }
+      // 한 줄로는 너무 작아지는 긴 제목: 책등 높이에 맞춰 두 줄로 나눈다
+      sp.style.whiteSpace='normal'; sp.style.maxHeight=H+'px';
+      f=Math.min(8, W/2.15);
+      while(f>=3.5){ sp.style.fontSize=f+'px'; if(fits()) return; f-=0.25; }
+      // 그래도 안 되면 한 줄로 가능한 가장 큰 글자
+      sp.style.whiteSpace='nowrap'; sp.style.maxHeight='none'; f=6;
+      while(f>=3){ sp.style.fontSize=f+'px'; if(fits()) return; f-=0.25; }
+    });
+  }
   function setupRows(){
+    fitTitles();
     wrap.querySelectorAll('.row').forEach(row=>{
       const strip=row.querySelector('.strip'), cyc=strip.querySelector('.cycle');
       const L={row, strip, cyc, W:cyc.offsetWidth, loop:false, off:0, v:0, raf:0};
@@ -4356,7 +4385,7 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     setTimeout(()=>{ if(toolStatus.textContent===msg) toolStatus.textContent=''; },2600);
   }
   function backupRecords(){
-    const data={app:'tiny-library',version:24,exportedAt:new Date().toISOString(),readSet:[...readSet],memos,progress,ttsRate};
+    const data={app:'tiny-library',version:25,exportedAt:new Date().toISOString(),readSet:[...readSet],memos,progress,ttsRate};
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob), a=document.createElement('a');
     a.href=url; a.download='소형도서관-기록-'+new Date().toISOString().slice(0,10)+'.json';
