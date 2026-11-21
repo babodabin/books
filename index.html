@@ -118,6 +118,31 @@
   .close-x{position:absolute; top:12px; right:16px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,0.06); border:none; font-size:18px; color:#5a4c38; display:flex; align-items:center; justify-content:center; z-index:2;}
   footer{text-align:center; padding:24px 20px 40px; color:#4a3826; font-size:11px; line-height:1.6;}
   .app-ver{display:inline-block; margin-top:6px; padding:3px 10px; border:1px solid #3a2c1c; border-radius:10px; opacity:.8;}
+
+  /* ===== v26 본문 읽기 ===== */
+  .text-open{display:block; width:100%; margin-top:10px; padding:11px 14px; border:1px solid var(--leather); background:var(--leather); color:#f6efdd; font:inherit; font-size:14.5px; font-weight:600; border-radius:10px; -webkit-tap-highlight-color:transparent;}
+  .reader{position:fixed; inset:0; z-index:200; background:#f4ecd8; color:#2a1f14; display:none; flex-direction:column;}
+  .reader.show{display:flex;}
+  .rd-head{flex:none; display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top) + 10px) 14px 10px; border-bottom:1px solid #d8c9a6; background:#efe4c9;}
+  .rd-head .rd-t{flex:1; min-width:0; font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rd-btn{border:1px solid #cdbb94; background:#f8f1e0; color:inherit; font:inherit; font-size:13px; padding:6px 11px; border-radius:14px; -webkit-tap-highlight-color:transparent; flex:none;}
+  .rd-btn[disabled]{opacity:.35;}
+  .rd-body{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:22px 20px 40px;}
+  .rd-body .rd-scene{font-size:20px; font-weight:700; margin:4px 0 18px; line-height:1.4; color:#5a2a1e;}
+  .rd-body p{font-size:var(--rdfs,17px); line-height:1.85; margin:0 0 1em; word-break:keep-all;}
+  .rd-body p .sp{font-weight:700; color:#6a3426;}
+  .rd-body .ref{display:block; font-size:12px; color:#8a7a5c; margin-top:3px; line-height:1.5;}
+  .rd-body .poem{margin:6px 0 20px; padding:12px 16px; border-left:3px solid #c9a44c; background:#efe5cc; font-size:calc(var(--rdfs,17px) - 1px); line-height:1.8; white-space:pre-line; font-style:italic;}
+  .rd-body .vs{display:inline; padding:1px 3px; background:#ebdfc2; border-radius:4px;}
+  .rd-toc{list-style:none; margin:0; padding:0;}
+  .rd-toc li{padding:14px 4px; border-bottom:1px solid #ddd0b2; font-size:16px; display:flex; gap:10px; align-items:baseline;}
+  .rd-toc li.off{color:#a89a7c;}
+  .rd-toc li .n{color:#a07a3a; font-weight:700; min-width:26px;}
+  .rd-toc li .st{margin-left:auto; font-size:12px; color:#a89a7c; flex:none;}
+  .rd-toc li.cur{background:#ece0c2;}
+  .rd-note{font-size:13px; color:#7a6b50; line-height:1.6; padding:10px 12px; background:#ebdfc2; border-radius:8px; margin-bottom:14px;}
+  .rd-foot{flex:none; display:flex; align-items:center; gap:8px; padding:10px 14px calc(env(safe-area-inset-bottom) + 10px); border-top:1px solid #d8c9a6; background:#efe4c9;}
+  .rd-foot .pos{flex:1; text-align:center; font-size:12.5px; color:#7a6b50;}
 .tts-row{display:flex; gap:8px; align-items:center; margin-top:10px;}
   .tts-btn{border:1px solid var(--line); background:var(--paper2); color:inherit; font:inherit; font-size:12.5px; padding:6px 12px; border-radius:14px; -webkit-tap-highlight-color:transparent;}
   .tts-btn.stop{background:#7a3030; color:#fff; border-color:#7a3030;}
@@ -268,7 +293,7 @@
       <button class="menu-item" id="backupBtn">기록 백업</button>
       <button class="menu-item" id="restoreBtn">기록 복원</button>
       <button class="menu-item" id="readOnlyBtn">읽은 책만 보기</button>
-      <div class="menu-foot"><span class="tool-status" id="toolStatus"></span><span class="menu-ver">v25</span></div>
+      <div class="menu-foot"><span class="tool-status" id="toolStatus"></span><span class="menu-ver">v26</span></div>
       <input id="restoreFile" type="file" accept="application/json,.json" hidden>
     </div>
   </header>
@@ -277,12 +302,13 @@
   <div class="zoom" id="zoom"></div>
 
   <footer>
-    요약·해석은 기억을 돕기 위해 새로 쓴 짧은 안내이며, 원문은 수록하지 않습니다.<br>
-    <span class="app-ver">소형 도서관 v25</span>
+    요약·해석은 기억을 돕기 위해 새로 쓴 안내입니다. 원문은 수록하지 않으며, 저작권이 끝난 책만 새로 번역한 본문을 함께 담았습니다.<br>
+    <span class="app-ver">소형 도서관 v26</span>
   </footer>
 
   <div class="book-toast" id="bookToast"></div>
   <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+  <div class="reader" id="reader"></div>
 
 <script>
 const BOOKS = [
@@ -3663,6 +3689,146 @@ const BOOKS = [
     ["비판적으로 읽을 지점","모든 사람이 테오의 선의에 마음을 여는 전개가 지나치게 순하고, 인물들이 한 사람의 선행으로 너무 쉽게 나아진다는 지적이 있다. 갑작스러운 결말을 두고도 평가가 갈린다. 이 책이 주는 위로와 그 순진함은 떼어 낼 수 없는 한 몸이어서, 읽는 사람이 무엇을 기대하느냐에 따라 감상이 크게 달라진다."]
   ]
 }
+,{
+  id:"pilgrim1", title:"천로역정 1부", author:"존 번연", year:1678, origin:"영국", tag:"신앙",
+  spineColor:"#5a3a22", long:true,
+  structure:"꿈의 형식으로 쓴 우화 — 한 순례자가 멸망의 도시를 떠나 천성에 이르기까지",
+  oneLine:"등에 죄의 짐을 진 한 사람이 '내가 어떻게 해야 구원을 얻습니까?'라고 울부짖으며 길을 떠난다 — 성경 다음으로 많이 읽혔다는 그리스도인의 순례 이야기.",
+  charsVol:"등장인물",
+  charsTitle:"주요 인물",
+  chars:[
+    ["크리스천","주인공. 원래 이름은 '은혜 없음'이었다. 책을 읽다가 자기 도시가 멸망할 것과 자기 등의 짐(죄)을 깨닫고, 아내와 자식을 두고 천성을 향해 떠난다. 용감하지만 자주 넘어지고, 의심의 성에 갇힐 만큼 약한 평범한 신자의 모습이다."],
+    ["전도자","크리스천에게 '임박한 진노를 피하라'는 두루마리를 주고 좁은 문을 가리켜 준 사람. 크리스천이 길을 잃을 때마다 다시 나타나 꾸짖고 바로잡는다. 복음을 전하는 설교자의 상징."],
+    ["고집과 변덕","크리스천을 끌고 오려고 쫓아온 두 이웃. 고집은 끝까지 비웃고 돌아가고, 변덕은 천국 이야기에 들떠 따라나섰다가 낙심의 늪에 빠지자 바로 돌아간다. 말씀에 뿌리내리지 못한 두 종류의 마음."],
+    ["세상지혜","'도덕 마을'에 사는 신사. 짐을 벗으려면 율법 씨의 집에 가라며 크리스천을 시내산 쪽으로 꾄다. 복음 대신 도덕과 체면으로 구원을 얻으려는 길의 상징."],
+    ["선의","좁은 문의 문지기. 문을 두드리는 크리스천을 잡아당겨 들여보낸다 — 문 근처에서 바알세불의 성이 화살을 쏘기 때문이다. 오는 자를 내쫓지 않으시는 그리스도의 모습."],
+    ["해석자","좁은 문 너머 집의 주인. 크리스천에게 여러 방의 그림과 장면을 보여 주며 신앙의 진리를 가르친다. 성경을 깨닫게 하시는 성령님의 상징."],
+    ["분별·신중·경건·사랑","아름다운 궁전의 네 처녀. 크리스천을 맞아들여 대화로 그의 신앙을 살피고, 무기고를 보여 주고, 갑옷을 입혀 보낸다. 교회 공동체의 상징."],
+    ["아볼루온","겸손의 골짜기에서 크리스천을 막아선 마귀. 용의 비늘, 사자의 입, 곰의 발을 가졌다. '멸망시키는 자'라는 뜻(계 9:11)."],
+    ["신실","크리스천과 같은 도시 출신의 순례자. 길에서 만나 동행하다가 허영의 시장에서 재판을 받고 불에 타 순교한다. 첫 번째 동행자."],
+    ["소망","허영의 시장에서 크리스천과 신실의 모습을 보고 회심한 사람. 신실이 죽은 뒤 크리스천의 길동무가 되어 끝까지 함께 간다. 크리스천이 무너질 때 붙들어 주는 존재."],
+    ["절망 거인과 소심","의심의 성 주인 부부. 샛길로 빠진 두 순례자를 잡아 지하 감옥에 가두고 자살하라고 부추긴다."],
+    ["무지","'자만' 나라 출신의 쾌활한 청년. 자기 마음이 선하니 천국에 갈 수 있다고 믿는다. 끝까지 따라가지만 천성 문 앞에서 지옥으로 떨어진다 — 이야기의 가장 무서운 마지막 장면."]
+  ],
+  pages:[
+    {vol:"출발", t:"① 짐을 진 사람 — 멸망의 도시를 떠나다", ps:[
+      "이야기는 저자 번연이 '이 세상 광야'의 한 굴에서 잠이 들어 꾸는 꿈으로 시작한다. 그 굴은 실제로 그가 12년을 갇혀 있던 베드퍼드 감옥이다. 꿈속에서 누더기를 걸친 한 사람이 책을 읽다가 떨며 울부짖는다 — '내가 어떻게 해야 합니까?' 그 책(성경)이 그에게 두 가지를 알려 주었다. 그가 사는 도시가 하늘의 불로 멸망할 것, 그리고 그의 등에 지워진 짐이 그를 무덤보다 깊이 끌어내릴 것.",
+      "그는 아내와 아이들에게 함께 떠나자고 하지만 가족들은 그가 미쳤다고 생각하고 비웃는다. 들판에서 울고 있을 때 전도자가 나타나 '임박한 진노를 피하라'고 적힌 두루마리를 건네고, 들판 너머 빛을 가리키며 좁은 문으로 가라고 한다. 그는 귀를 막고 '생명! 생명! 영원한 생명!'을 외치며 달려간다.",
+      "이웃 고집과 변덕이 그를 쫓아온다. 고집은 '책 따위 치워라'며 돌아가고, 변덕은 천국의 면류관과 빛나는 옷 이야기에 마음이 들떠 따라나선다. 이 장면은 복음을 듣는 두 종류의 사람 — 처음부터 거부하는 사람과, 감정으로만 받아들이는 사람 — 을 보여 준다.",
+      "그러나 들판 한가운데서 두 사람은 낙심의 늪에 빠진다. 죄를 깨달을 때 생기는 두려움과 의심이 고여 만든 늪이다. 짐이 없는 변덕은 '이게 행복이냐'며 자기 집 쪽으로 기어 나가 돌아가 버리고, 짐 때문에 가라앉던 크리스천은 '도움'이라는 사람이 끌어내 준다. 늪 한가운데 하나님이 놓아두신 디딤돌(약속의 말씀)이 있었지만, 두려움에 쫓겨 보지 못한 것이다."
+    ]},
+    {vol:"출발", t:"② 세상지혜의 꾐과 좁은 문", ps:[
+      "혼자 걷던 크리스천 앞에 '도덕 마을'의 세상지혜 씨가 나타난다. 그는 전도자의 길은 위험하다며, 가까운 마을의 율법 씨나 그 아들 예절 씨를 찾아가면 짐을 쉽게 벗을 수 있다고 권한다. 그리로 가는 길에 큰 산(시내산)이 있는데, 다가갈수록 산이 머리 위로 기울어져 덮칠 것 같고 불이 번쩍인다. 크리스천은 짐이 오히려 더 무거워진 채 공포에 떤다.",
+      "이때 전도자가 다시 나타나 그를 엄하게 꾸짖는다. 율법 씨는 아무의 짐도 벗겨 줄 수 없는 자이고, 세상지혜는 십자가를 미워하는 자라고. 율법으로는 의롭게 될 수 없다는 갈라디아서의 메시지가 그대로 이야기가 된 장면이다. 크리스천은 울며 회개하고 다시 길로 돌아간다.",
+      "좁은 문에서 그는 문을 두드리며 '나 같은 자도 들어갈 수 있습니까?' 하고 묻는다. 문지기 선의는 그를 확 잡아당겨 들인다 — 문 바로 옆 바알세불의 성에서 문으로 오는 자들에게 화살을 쏘기 때문이다. 선의는 '우리는 아무도 내쫓지 않는다'고 말하며, 좁고 곧은 길을 가리켜 준다. 짐은 아직 그대로다. 짐은 '구원의 자리'에 가야 벗겨진다고 한다."
+    ]},
+    {vol:"배움", t:"③ 해석자의 집 — 일곱 가지 그림", ps:[
+      "해석자는 크리스천에게 방마다 다른 장면을 보여 준다. 첫째, 눈을 하늘로 향하고 책을 든 진지한 사람의 그림 — 순례길에서 믿고 따를 참된 안내자(목자)의 모습. 둘째, 먼지 가득한 방을 비로 쓸자 먼지만 날리고, 물을 뿌리자 깨끗해지는 장면 — 율법은 죄를 일으켜 드러낼 뿐이고, 복음이 마음을 깨끗하게 한다.",
+      "셋째, 지금 당장 좋은 것을 다 받아 금방 탕진하는 '정욕'과, 기다리는 '인내' 두 아이. 넷째, 물을 끼얹어도 꺼지지 않는 불 — 벽 뒤에서 몰래 기름을 붓는 사람이 있다. 사탄이 꺼뜨리려 해도 그리스도께서 은혜의 기름을 계속 부으셔서 신앙의 불은 꺼지지 않는다.",
+      "다섯째, 무장한 사람들이 지키는 궁전 문 앞에서 '내 이름을 적어 주시오' 하고 칼을 빼어 싸워 들어가는 용감한 사람. 여섯째, 쇠창살 우리에 갇힌 절망의 사람 — 한때 신앙이 좋았지만 죄를 가볍게 여기다 마음이 굳어 이제 회개할 수 없다고 말한다. 일곱째, 심판의 꿈을 꾸고 떨며 일어난 사람.",
+      "해석자는 이 모든 것을 '마음에 새겨 두라, 그것이 너를 앞으로 찌르는 가시가 되게 하라'고 말한다. 이 집은 순례자가 길을 떠나기 전 성경을 통해 진리를 배우는 자리, 즉 성령께서 말씀을 열어 주시는 자리다."
+    ]},
+    {vol:"구원", t:"④ 십자가 앞에서 짐이 굴러떨어지다", ps:[
+      "'구원'이라는 벽으로 둘러싸인 길을 따라 언덕을 오르자 십자가가 서 있고, 조금 아래에 무덤이 있다. 크리스천이 십자가에 이르는 순간 짐이 어깨에서 풀려 굴러 내려가 무덤 속으로 사라진다. 그는 '그분이 고난으로 내게 안식을, 죽음으로 내게 생명을 주셨다'고 외치며 눈물을 흘린다.",
+      "빛나는 세 사람이 나타나 첫째는 '네 죄가 사함을 받았다', 둘째는 누더기를 벗기고 새 옷을 입히고, 셋째는 이마에 표를 찍어 주고 봉인된 두루마리를 준다. 천성 문에서 내밀 증서다. 칭의(의롭다 하심)와 새 옷(그리스도의 의), 성령의 인치심을 그대로 그린 장면이다.",
+      "번연이 강조하는 순서가 중요하다. 짐은 좁은 문에서가 아니라 십자가에서 풀린다. 그리고 크리스천은 짐을 벗기 위해 아무것도 하지 않는다 — 바라보았을 뿐이다. 행위가 아니라 십자가의 은혜로 짐이 풀린다는 개혁신학의 핵심이다.",
+      "곧이어 쇠사슬에 묶여 자는 단순·나태·교만 세 사람, 담을 넘어 지름길로 들어온 형식과 위선을 만난다. 형식과 위선은 '어떻게 들어왔든 길에 있으면 그만'이라고 말하지만, 그들은 좁은 문으로 오지 않았다. 곤고의 언덕 앞에서 둘은 쉬운 옆길(위험, 멸망)로 갔다가 사라진다."
+    ]},
+    {vol:"시련", t:"⑤ 곤고의 언덕과 아름다운 궁전", ps:[
+      "크리스천은 가파른 곤고의 언덕을 기어오른다. 중턱의 정자에서 쉬다가 잠이 들어 두루마리를 떨어뜨린다. 정상에서 겁쟁이와 불신이 '앞에 사자가 있다'며 도망쳐 내려오고, 두루마리를 찾아 읽으려던 크리스천은 그것이 없다는 걸 깨닫는다. 울며 정자로 되돌아가 두루마리를 찾는다 — 잠든 사이 잃어버린 구원의 확신을 되찾으러 가는 길이다.",
+      "날이 저물어 아름다운 궁전에 이르자 길 양쪽에 사자 두 마리가 있다. 문지기 경계가 '사자는 사슬에 묶여 있으니 길 가운데로만 오라'고 외친다. 두려움은 실제보다 크게 보이고, 하나님은 위험의 한계를 정해 두신다는 장면.",
+      "궁전에서 분별·신중·경건·사랑이 그를 맞아 밤늦게까지 대화한다. 왜 길을 떠났는지, 가족은 왜 두고 왔는지, 지금도 옛 생각이 나는지. 신중의 질문에 크리스천은 '십자가에 달리신 분을 생각하면 그 생각이 사라진다'고 답한다. 그는 '평안'이라는 방에서 자고, 다음 날 서재에서 옛 성도들의 기록을 보고, 무기고에서 갑옷을 입는다.",
+      "떠나는 날 아침 그들은 그에게 멀리 '기쁨의 산'을 보여 준다. 그 너머에 천성이 있다. 이 궁전은 순례자가 교회 안에서 신앙을 점검받고 무장하는 곳 — 교회의 교제와 성례의 상징이다."
+    ]},
+    {vol:"시련", t:"⑥ 아볼루온과의 싸움, 사망의 그늘 골짜기", ps:[
+      "겸손의 골짜기로 내려가자 아볼루온이 날개를 펴고 막아선다. 그는 '너는 내 나라 백성이었다, 돌아오라'며 회유하고, 크리스천이 거절하자 그가 길에서 넘어졌던 일들을 하나하나 들춰내 고발한다. 크리스천은 '그건 다 사실이지만 내 왕은 자비로우셔서 다 용서하셨다'고 답한다. 그러자 불화살을 쏘며 반나절 동안 싸움이 이어진다.",
+      "크리스천은 상처를 입고 칼까지 떨어뜨려 죽을 지경에 이른다. 아볼루온이 마지막 일격을 가하려는 순간, 그는 칼을 다시 잡으며 '내 원수여 나로 인하여 기뻐하지 말지어다 나는 엎드러질지라도 일어날 것이요'(미 7:8)를 외치며 찌른다. 아볼루온은 날개를 펴고 달아난다. 말씀의 검으로 이기는 싸움.",
+      "그다음은 사망의 그늘 골짜기다. 한쪽은 깊은 도랑, 한쪽은 수렁, 가운데는 아주 좁은 길. 지옥 입구가 길가에 있어 불꽃과 신음이 쏟아진다. 크리스천은 칼 대신 '모든 기도'라는 무기를 들고 걷는다. 가장 무서운 것은 마귀가 그의 귀에 대고 신성모독의 말을 속삭이는데, 그는 그것이 자기 생각인 줄 알고 괴로워한다는 장면이다.",
+      "그때 앞에서 누군가 '내가 사망의 음침한 골짜기로 다닐지라도 해를 두려워하지 않을 것은 주께서 나와 함께 하심이라'(시 23:4)는 노래를 부르는 소리가 들린다. 혼자가 아니라는 것. 날이 밝자 지나온 길의 위험이 보이고, 골짜기 끝에서 옛날 순례자들을 죽인 두 거인 '교황'과 '이교'의 동굴을 지난다."
+    ]},
+    {vol:"동행", t:"⑦ 신실과 수다쟁이, 그리고 허영의 시장", ps:[
+      "앞서가던 신실을 따라잡아 둘은 동행한다. 신실은 자기가 겪은 유혹 — 방탕 부인의 꾐, '첫째 아담'이라는 노인이 딸들을 주겠다며 종으로 삼으려던 일, 모세가 나타나 그를 때려눕힌 일, 겸손의 골짜기에서 만난 '불만'과 '수치' — 를 이야기한다. 같은 길이어도 사람마다 다른 시련을 겪는다는 것을 보여 준다.",
+      "수다쟁이를 만난다. 그는 천국, 은혜, 회개 무엇이든 막힘없이 말하지만 집에서의 삶은 엉망이다. 신실이 '은혜가 마음에 있다는 증거가 무엇이냐'고 묻자 그는 화를 내며 떠난다. '말하는 것과 아는 것은 다르고, 아는 것과 행하는 것은 다르다' — 신앙의 실재를 묻는 장면.",
+      "전도자가 다시 나타나 앞으로 닥칠 고난과 둘 중 하나가 피로 증언하게 될 것을 예고한다. 곧 그들은 허영의 시장에 들어선다. 1년 내내 집, 땅, 명예, 지위, 쾌락, 아내, 남편, 영혼까지 무엇이든 파는 시장. 두 사람이 '우리는 진리를 산다'며 아무것도 사지 않자 소동이 일고, 쇠우리에 갇혀 조롱을 받는다.",
+      "재판장 '선을 미워함' 앞에서 질투·미신·아첨이 증언하고, 맹목·악의·음탕 같은 배심원들이 유죄를 선언한다. 신실은 채찍질과 칼에 찔린 뒤 불에 타 죽는다. 그러나 번연은 군중 뒤에 마차가 기다리고 있다가 그를 구름 사이로 곧장 천성으로 데려갔다고 쓴다. 영국 국교회 시대 박해받던 비국교도들의 현실이 그대로 담긴 장면이다."
+    ]},
+    {vol:"동행", t:"⑧ 소망, 사심, 그리고 의심의 성", ps:[
+      "허영의 시장에서 두 사람을 지켜보던 '소망'이 크리스천의 새 길동무가 된다. 한 사람의 순교가 다른 사람을 일으킨 것이다. 곧 '말 잘하는 마을'의 사심 씨를 만나는데, 그는 '바람이 순할 때만, 신앙이 은 신을 신고 다닐 때만 함께 간다'는 사람이다. 돈을 위해 신앙을 이용하는 사람들의 상징.",
+      "'이익'이라는 언덕의 은광에서 데마가 '와서 보라'고 부른다. 크리스천은 거절하지만, 사심과 친구들은 그리로 갔다가 다시 보이지 않는다. 조금 더 가니 롯의 아내의 소금 기둥이 서 있다. 두 사람은 뒤돌아보았던 그 여인을 보며 탐심을 경계한다.",
+      "생명수 강가에서 쉬던 그들은 길이 험해지자 옆의 '샛길 초장'으로 넘어간다. 길과 나란히 가니 괜찮겠다고 크리스천이 먼저 권한다. 그러나 밤이 되자 폭우가 쏟아지고 앞서가던 '헛된 자신감'은 구덩이에 빠져 죽는다. 길로 돌아가려 했지만 물이 불어 돌아갈 수 없다.",
+      "그들은 절망 거인의 땅에서 잠들었다가 붙잡혀 의심의 성 지하 감옥에 갇힌다. 빛도 음식도 없이 매를 맞으며 나흘을 지낸다. 거인은 '차라리 스스로 목숨을 끊으라'고 부추기고, 크리스천은 거의 그 말에 넘어갈 뻔한다. 이번에는 소망이 그를 붙든다 — '아볼루온도 이긴 당신이 아니오.' 토요일 밤부터 기도하던 크리스천은 새벽에 외친다. '내 품에 약속이라는 열쇠가 있었는데!' 그 열쇠로 모든 문이 열린다."
+    ]},
+    {vol:"끝", t:"⑨ 기쁨의 산, 무지, 마법의 땅", ps:[
+      "기쁨의 산에서 목자들(지식·경험·경계·진실)이 그들을 맞는다. 오류의 언덕 아래 떨어져 죽은 자들, 무덤 사이를 헤매는 눈먼 자들(의심의 성에서 눈이 뽑힌 이들), 언덕 옆의 지옥 샛문을 보여 주고, 망원경으로 멀리 천성의 문을 보게 해 준다. 손이 떨려 잘 보이지는 않았지만.",
+      "산에서 내려오자 '자만' 나라 출신의 무지를 만난다. 좁은 문이 아니라 옆의 굽은 길로 들어온 그는 '나는 착하게 살고 기도도 하니 천국에 갈 것'이라 말한다. 크리스천은 그의 마음이 자기 마음을 의지하고 있다고 경고하지만 그는 듣지 않는다. 이어 크리스천은 강도에게 돈은 빼앗겼지만 보석(믿음)은 지킨 '작은믿음' 이야기를 들려준다.",
+      "아첨꾼을 따라가다 그물에 걸려 빛나는 이에게 채찍을 맞고, 천성은 없다며 비웃는 무신론자를 지나, 공기만 마셔도 졸음이 오는 마법의 땅에 들어선다. 소망이 졸려 하자 크리스천은 '잠들지 말자, 이야기하자'고 하며 소망에게 어떻게 회심했는지 묻는다. 소망은 죄를 깨닫고, 행위로 의로워지려다 실패하고, 마침내 그리스도를 보게 된 과정을 길게 들려준다.",
+      "뒤따라온 무지와의 마지막 대화에서 크리스천은 '참된 믿음은 자기 의가 아니라 그리스도의 의를 붙드는 것'이라고 설명하지만, 무지는 '그건 당신들의 상상'이라며 따로 걷는다. 이 대화는 이신칭의를 둘러싼 번연 시대의 논쟁을 그대로 담고 있다."
+    ]},
+    {vol:"끝", t:"⑩ 쁄라 땅과 죽음의 강, 그리고 천성", ps:[
+      "마법의 땅을 지나 쁄라 땅에 이른다. 새들이 노래하고 꽃이 피며 천성의 빛이 비치는 곳. 순례자들은 천성이 가까워지자 사랑으로 병이 날 지경이 된다. 그러나 천성 앞에는 다리 없는 강이 흐른다 — 죽음이다. 빛나는 두 사람은 '그 강은 왕을 믿는 정도에 따라 깊어지기도 얕아지기도 한다'고 말한다.",
+      "강에 들어서자 크리스천은 깊은 물에 빠져 가라앉는다. 지난 죄들과 공포가 몰려와 '나는 저 땅을 보지 못하겠다'고 외친다. 소망이 그의 머리를 물 위로 붙들며 '형제여, 바닥이 느껴지오, 좋은 바닥이오' 하고 격려한다. '예수 그리스도께서 너를 온전하게 하신다'는 말에 크리스천이 '오, 그분이 다시 보인다!' 외치고, 둘은 마침내 건너편 땅에 발을 디딘다.",
+      "빛나는 이들의 안내로 언덕을 오르니 천성 문이다. 증서를 내밀자 문이 열리고, 두 사람은 금빛 옷을 입고 거문고와 면류관을 받는다. 성 안의 모든 종이 울리고 '거룩, 거룩, 거룩하신 주여' 하는 노래가 들린다. 나는 문틈으로 그 안을 보고 그들과 함께 있고 싶어졌다.",
+      "그런데 마지막 장면이 반전이다. 뒤따라온 무지가 '헛된 소망'이라는 뱃사공의 배로 강을 쉽게 건너 문 앞에 온다. 증서를 내놓으라는 말에 그는 가슴을 더듬지만 아무것도 없다. 두 빛나는 이가 그의 손발을 묶어 언덕 옆의 문으로 던져 넣는다. '그때 나는, 멸망의 도시에서만이 아니라 천국 문 앞에서도 지옥으로 가는 길이 있다는 것을 보았다.' 그리고 나는 꿈에서 깨어났다."
+    ]}
+  ],
+  bgVol:"배경",
+  bgTitle:"작가와 시대",
+  bg:[
+    ["땜장이 출신 설교자","존 번연(1628~1688)은 잉글랜드 베드퍼드셔의 가난한 땜장이 집안에서 태어났다. 학교 교육은 거의 받지 못했고, 청교도 혁명 때 의회군 병사로 복무했다. 결혼 후 아내가 가져온 신앙 서적 두 권과 베드퍼드 교회 여인들의 대화를 통해 깊은 영적 갈등 끝에 회심했다. 그 과정을 직접 쓴 자서전이 『죄인 중의 괴수에게 넘치는 은혜』다."],
+    ["감옥에서 쓴 책","1660년 왕정복고 이후 영국 국교회 밖에서 설교하는 것이 불법이 되었고, 번연은 설교를 멈추라는 명령을 거부해 12년간 베드퍼드 감옥에 갇혔다. 눈먼 딸을 포함한 가족을 두고 감옥에 있으면서 구두끈을 만들어 생계를 도왔다. 『천로역정』 1부의 대부분은 이 감옥, 또는 1675년 두 번째 수감 때 쓴 것으로 본다. 책 첫 문장의 '굴'이 바로 감옥이다."],
+    ["누구를 위해 썼나","당시 비국교도 신자들은 벌금, 투옥, 재산 몰수를 당했다. 허영의 시장 재판 장면은 그들이 실제로 겪던 재판을 거의 그대로 옮긴 것이다. 번연은 학자가 아니라 시골 사람들, 글을 막 배운 신자들이 읽을 수 있도록 성경 다음으로 그들이 가진 유일한 책이 될 수 있는 이야기를 썼다."],
+    ["출판과 영향","1678년 출간되자마자 폭발적인 인기를 얻어 번연 생전에만 11판을 찍었다. 이후 200개가 넘는 언어로 번역되어 '성경 다음으로 많이 읽힌 책'이라는 말을 듣는다. 조선에는 1895년 게일 선교사 부부가 『텬로력뎡』으로 번역해 소개했고, 김준근의 삽화가 들어가 인물들이 갓을 쓴 조선 사람으로 그려졌다. 한글 번역 기독교 문학의 첫 책 가운데 하나다."],
+    ["신학적 배경","번연은 칼빈주의 청교도 침례교인이었다. 오직 은혜로 구원받는다는 것, 율법으로는 의로워질 수 없다는 것, 구원받은 성도는 끝까지 지켜진다는 것(성도의 견인)이 이야기 전체에 흐른다. 크리스천이 수없이 넘어져도 결국 천성에 이르는 이유다."]
+  ],
+  symbolsVol:"상징",
+  symbolsTitle:"상징과 장소",
+  symbols:[
+    ["등의 짐","죄의 무게와 죄책. 좁은 문에서도, 해석자의 집에서도 풀리지 않다가 오직 십자가 앞에서 저절로 풀려 무덤 속으로 굴러간다."],
+    ["책","성경. 크리스천은 처음부터 끝까지 이 책을 손에 들고 있으며, 길을 잃을 때마다 이 책과 전도자의 말로 돌아온다."],
+    ["좁은 문","그리스도께 나아가는 입구(마 7:13). 담을 넘어 들어온 형식과 위선, 옆길로 들어온 무지는 결국 천성에 이르지 못한다."],
+    ["두루마리(증서)","십자가에서 받은 구원의 확신. 정자에서 잠들어 잃어버리고, 다시 찾아오며, 천성 문에서 내미는 입장권이다."],
+    ["낙심의 늪","죄를 깨달은 직후 찾아오는 두려움과 의심. 1,600년 동안 고치려 했지만 고칠 수 없었고, 하나님의 약속이라는 디딤돌만 있다."],
+    ["허영의 시장","세상 그 자체. 사람의 영혼까지 사고파는 곳이며, 순례자는 그곳을 피해 갈 수 없고 지나가야만 한다(요 17:15)."],
+    ["약속이라는 열쇠","의심의 성 감옥 문을 연 열쇠. 크리스천의 품에 처음부터 있었지만 절망 속에서 잊고 있었다. 하나님의 약속의 말씀을 가리킨다."],
+    ["죽음의 강","다리가 없어 누구나 건너야 하는 강. 믿음에 따라 깊이가 달라진다. 소망이 붙들어 주어 크리스천이 건너는 장면은 임종의 순간에 대한 위로로 수백 년간 읽혀 왔다."]
+  ],
+  meaningVol:"해석",
+  meaningTitle:"핵심 해석",
+  meaning:[
+    ["구원은 십자가에서","이 책의 중심은 4장의 십자가 장면이다. 짐은 노력으로, 도덕으로, 종교 형식으로 벗겨지지 않는다. 시내산(율법)은 짐을 더 무겁게 할 뿐이다. 크리스천이 한 일은 십자가를 '바라본 것'뿐이다. 오직 은혜, 오직 믿음이라는 종교개혁의 고백이 한 장면으로 그려졌다."],
+    ["넘어지는 성도","크리스천은 영웅이 아니다. 늪에 빠지고, 세상지혜에게 속고, 잠들어 두루마리를 잃고, 샛길로 빠져 절망의 감옥에 갇힌다. 번연은 구원받은 사람도 이렇게 넘어진다는 것을 숨기지 않는다. 그럼에도 끝까지 간다 — 그를 붙드는 것은 그의 힘이 아니라 약속이기 때문이다."],
+    ["동행의 의미","크리스천은 혼자 시작했지만 신실과, 그 다음엔 소망과 함께 간다. 의심의 성에서 크리스천을 살린 것도, 죽음의 강에서 그의 머리를 들어 준 것도 소망이었다. 신앙의 길은 혼자 가는 길이 아니라는 것이 이 책의 또 다른 축이다."],
+    ["가짜 순례자들","이 책에는 순례자처럼 보이는 가짜들이 끊임없이 나온다. 변덕(감정), 형식과 위선(종교 의식), 수다쟁이(말), 사심(이익), 무지(자기 의). 번연은 길 위에 있다고 다 천성에 가는 것은 아니라고, 들어온 문과 붙든 의가 무엇인지 묻는다."],
+    ["가장 무서운 마지막 문장","천성 문 앞까지 와서 지옥으로 떨어지는 무지의 결말은, 이 책이 단순한 해피엔딩이 아니라는 것을 보여 준다. 자기 마음이 선하다고 믿는 '착한 사람'이 가장 위험할 수 있다는 경고다. 독자에게 '너는 어떤 문으로 들어왔느냐'고 묻는 질문으로 책이 끝난다."],
+    ["오늘 읽을 때","허영의 시장은 오늘날 소비 사회와 겹쳐 읽히고, 낙심의 늪과 의심의 성은 신앙인의 우울과 절망에 대한 정직한 묘사로 읽힌다. 다만 등장인물 대부분이 미덕이나 악덕의 이름 그 자체라 현대 소설처럼 입체적이지는 않다. 이 책은 인물 소설이 아니라 지도다 — 신앙의 길에서 지금 내가 어디쯤 있는지 비춰 보는 지도."]
+  ],
+  text:{dir:"texts/pilgrim1", note:"1678년 원문(저작권 만료)을 새로 번역했습니다. 성경 인용은 개역한글판을 따랐고, 각 문단 아래 작은 글씨는 번연이 여백에 달아 둔 성경 구절입니다.", scenes:[
+    {t:"멸망의 도시를 떠나다", ready:true},
+    {t:"낙심의 늪", ready:true},
+    {t:"세상지혜의 꾐과 시내산", ready:false},
+    {t:"좁은 문", ready:false},
+    {t:"해석자의 집 (1)", ready:false},
+    {t:"해석자의 집 (2)", ready:false},
+    {t:"십자가 앞에서 짐이 풀리다", ready:false},
+    {t:"곤고의 언덕", ready:false},
+    {t:"아름다운 궁전", ready:false},
+    {t:"겸손의 골짜기 — 아볼루온과의 싸움", ready:false},
+    {t:"사망의 그늘 골짜기", ready:false},
+    {t:"신실과의 동행", ready:false},
+    {t:"수다쟁이 (1)", ready:false},
+    {t:"수다쟁이 (2)", ready:false},
+    {t:"허영의 시장", ready:false},
+    {t:"소망, 그리고 사심 씨", ready:false},
+    {t:"데마의 은광과 소금 기둥", ready:false},
+    {t:"샛길 초장과 의심의 성", ready:false},
+    {t:"기쁨의 산과 목자들", ready:false},
+    {t:"무지, 그리고 작은믿음 이야기", ready:false},
+    {t:"아첨꾼과 무신론자", ready:false},
+    {t:"마법의 땅 — 소망의 회심 이야기", ready:false},
+    {t:"무지와의 대화", ready:false},
+    {t:"쁄라 땅과 죽음의 강, 그리고 천성", ready:false}
+  ]}
+}
 ];
 if(typeof module!=='undefined') module.exports=BOOKS;
 
@@ -3748,6 +3914,7 @@ if(typeof module!=='undefined') module.exports=BOOKS;
       shelfIfAny('철학·사상', BOOKS.filter(b=>b.tag==='철학·사상'));
       shelfIfAny('역사·인류', BOOKS.filter(b=>b.tag==='역사·인류'));
       shelfIfAny('사회·과학', BOOKS.filter(b=>b.tag==='사회·과학'));
+      shelfIfAny('신앙', BOOKS.filter(b=>b.tag==='신앙'));
     } else if(filter==='문학'){
       renderLitShelves();
     } else if(filter==='read'){
@@ -4179,6 +4346,7 @@ if(typeof module!=='undefined') module.exports=BOOKS;
         <h2 class="sheet-title">${b.title}</h2>
         <div class="sheet-meta">${b.author} · ${b.origin} · ${b.year}년 · ${b.tag}</div>
         <div class="oneliner">${b.oneLine}</div>
+        ${b.text?`<button class="text-open" id="textOpen">📖 본문 읽기 · 전문 번역 (${b.text.scenes.filter(x=>x.ready).length}/${b.text.scenes.length}장)</button>`:''}
         <div class="nav-row">
           <div class="vol-tag">${volLabel}</div>
           <div class="dots">${dotsHtml}</div>
@@ -4197,6 +4365,7 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     const body=$('sheetBody'); if(body) body.scrollTop=0;
 
     $('closeX').addEventListener('click',closeBook);
+    const to=$('textOpen'); if(to) to.addEventListener('click',()=>openReader(b));
     const jf=$('jbFirst'), jl=$('jbLast'), jp=$('jbPrev'), jn=$('jbNext');
     if(jf) jf.addEventListener('click',jumpFirst);
     if(jl) jl.addEventListener('click',jumpLast);
@@ -4379,6 +4548,87 @@ if(typeof module!=='undefined') module.exports=BOOKS;
     if(filter==='read') render(); else syncReadMarks();
   }
   overlay.addEventListener('click',e=>{ if(e.target===overlay) closeBook(); });
+
+  // ===== v26 본문 읽기 (저작권이 끝난 책의 새 번역) =====
+  const reader=$('reader');
+  let rdBook=null, rdScene=-1, rdCache={}, rdSpeaking=false, rdSess=0;
+  function rdEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function rdKey(b){ return 'txt:'+b.id; }
+  function rdFs(){ const v=parseInt(progress['rdfs'],10); return (v>=14&&v<=24)?v:17; }
+  function openReader(b){
+    stopTTS(true);
+    rdBook=b; reader.classList.add('show');
+    reader.style.setProperty('--rdfs', rdFs()+'px');
+    const sv=progress[rdKey(b)];
+    if(sv && Number.isInteger(sv.s) && b.text.scenes[sv.s] && b.text.scenes[sv.s].ready) showScene(sv.s, sv.y||0);
+    else showToc();
+  }
+  function closeReader(){ rdStop(); rdSavePos(); reader.classList.remove('show'); rdBook=null; }
+  function rdSavePos(){
+    if(!rdBook || rdScene<0) return;
+    const body=$('rdBody'); const y=body? body.scrollTop/Math.max(1,body.scrollHeight-body.clientHeight):0;
+    progress[rdKey(rdBook)]={s:rdScene, y:Math.round(y*1000)/1000}; saveProgress();
+  }
+  function rdShell(title, bodyHtml, footHtml){
+    reader.innerHTML=`<div class="rd-head"><button class="rd-btn" id="rdClose">✕</button><div class="rd-t">${rdEsc(title)}</div>
+      <button class="rd-btn" id="rdFsDn">가−</button><button class="rd-btn" id="rdFsUp">가+</button><button class="rd-btn" id="rdToc">목차</button></div>
+      <div class="rd-body" id="rdBody">${bodyHtml}</div><div class="rd-foot">${footHtml}</div>`;
+    $('rdClose').onclick=closeReader;
+    $('rdToc').onclick=()=>{ rdStop(); rdSavePos(); showToc(); };
+    const fs=d=>{ const v=Math.min(24,Math.max(14,rdFs()+d)); progress['rdfs']=v; saveProgress(); reader.style.setProperty('--rdfs',v+'px'); };
+    $('rdFsDn').onclick=()=>fs(-1); $('rdFsUp').onclick=()=>fs(1);
+  }
+  function showToc(){
+    rdScene=-1; const b=rdBook, T=b.text; const sv=progress[rdKey(b)];
+    const items=T.scenes.map((x,i)=>`<li class="${x.ready?'':'off'} ${sv&&sv.s===i?'cur':''}" data-i="${i}"><span class="n">${i+1}</span><span>${rdEsc(x.t)}</span><span class="st">${x.ready?(sv&&sv.s===i?'읽던 곳':''):'번역 중'}</span></li>`).join('');
+    rdShell(b.title+' · 목차', `<div class="rd-note">${T.note||''}</div><ul class="rd-toc">${items}</ul>`,
+      `<span class="pos">${T.scenes.filter(x=>x.ready).length} / ${T.scenes.length}장 번역됨</span>`);
+    reader.querySelectorAll('.rd-toc li').forEach(li=>li.onclick=()=>{ const i=+li.dataset.i; if(T.scenes[i].ready) showScene(i,0); });
+  }
+  async function loadScene(b,i){
+    const k=b.id+'/'+i; if(rdCache[k]) return rdCache[k];
+    const url=b.text.dir+'/'+String(i+1).padStart(2,'0')+'.json?v='+(b.text.scenes[i].v||1);
+    const r=await fetch(url); if(!r.ok) throw new Error('load'); const j=await r.json(); rdCache[k]=j; return j;
+  }
+  function sceneHtml(j){
+    return `<div class="rd-scene">${rdEsc(j.t)}</div>`+j.ps.map(x=>{
+      if(typeof x==='string') return `<p>${rdEsc(x)}</p>`;
+      if(x.poem) return `<div class="poem">${rdEsc(x.poem)}</div>`;
+      let h=x.sp?`<span class="sp">${rdEsc(x.sp)}</span> `:'';
+      h+=rdEsc(x.p).replace(/【(.+?)】/g,'<span class="vs">$1</span>');
+      if(x.r) h+=`<span class="ref">${rdEsc(x.r)}</span>`;
+      return `<p>${h}</p>`;
+    }).join('');
+  }
+  async function showScene(i,y){
+    rdStop(); const b=rdBook, T=b.text; rdScene=i;
+    rdShell(b.title, '<p style="color:#8a7a5c">불러오는 중…</p>', '');
+    let j; try{ j=await loadScene(b,i); }catch(e){ rdShell(b.title,'<p>본문을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 다시 열어 주세요.</p>',''); return; }
+    if(rdBook!==b || rdScene!==i) return;
+    const prevOk=i>0&&T.scenes[i-1].ready, nextOk=i<T.scenes.length-1&&T.scenes[i+1].ready;
+    rdShell(b.title, sceneHtml(j)+(nextOk?'':`<p style="text-align:center;color:#8a7a5c;margin-top:30px">— ${i<T.scenes.length-1?'다음 장은 번역 중입니다':'끝'} —</p>`),
+      `<button class="rd-btn" id="rdPrev" ${prevOk?'':'disabled'}>‹ 이전 장</button><span class="pos">${i+1} / ${T.scenes.length}장</span>
+       <button class="rd-btn" id="rdSpeak">🔊 듣기</button><button class="rd-btn" id="rdNext" ${nextOk?'':'disabled'}>다음 장 ›</button>`);
+    const body=$('rdBody');
+    requestAnimationFrame(()=>{ body.scrollTop=(y||0)*(body.scrollHeight-body.clientHeight); });
+    let t=null; body.addEventListener('scroll',()=>{ clearTimeout(t); t=setTimeout(rdSavePos,400); });
+    $('rdPrev').onclick=()=>{ if(prevOk){ showScene(i-1,0); } };
+    $('rdNext').onclick=()=>{ if(nextOk){ showScene(i+1,0); } };
+    $('rdSpeak').onclick=()=>{ rdSpeaking? rdStop() : rdSpeak(j); };
+    rdSavePos();
+  }
+  function rdStop(){ rdSess++; rdSpeaking=false; try{ speechSynthesis.cancel(); }catch(e){} const sb=$('rdSpeak'); if(sb) sb.textContent='🔊 듣기'; }
+  function rdSpeak(j){
+    if(!('speechSynthesis' in window)) return;
+    rdStop(); const sess=++rdSess; rdSpeaking=true; const sb=$('rdSpeak'); if(sb) sb.textContent='■ 정지';
+    const text=[j.t].concat(j.ps.map(x=>typeof x==='string'?x:(x.poem||((x.sp?x.sp+'. ':'')+x.p)))).join('\n').replace(/[【】]/g,'');
+    const parts=[]; text.split(/(?<=[.?!。…”])\s+|\n+/).forEach(s=>{ s=s.trim(); while(s.length>180){ parts.push(s.slice(0,180)); s=s.slice(180);} if(s) parts.push(s); });
+    let k=0;
+    const next=()=>{ if(sess!==rdSess) return; if(k>=parts.length){ rdStop(); return; }
+      const u=new SpeechSynthesisUtterance(parts[k++]); u.lang='ko-KR'; u.rate=ttsRate; u.onend=next; u.onerror=next; speechSynthesis.speak(u); };
+    next();
+  }
+
 
   function flashStatus(msg,bad){
     toolStatus.style.color=bad?'#d98778':'#87b98d'; toolStatus.textContent=msg;
