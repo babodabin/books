@@ -3808,8 +3808,8 @@ const BOOKS = [
     {t:"세상지혜의 꾐과 시내산", ready:true},
     {t:"좁은 문", ready:true},
     {t:"해석자의 집 (1)", ready:true},
-    {t:"해석자의 집 (2)", ready:false},
-    {t:"십자가 앞에서 짐이 풀리다", ready:false},
+    {t:"해석자의 집 (2)", ready:true},
+    {t:"십자가 앞에서 짐이 풀리다", ready:true},
     {t:"곤고의 언덕", ready:false},
     {t:"아름다운 궁전", ready:false},
     {t:"겸손의 골짜기 — 아볼루온과의 싸움", ready:false},
@@ -4593,7 +4593,7 @@ if(typeof module!=='undefined') module.exports=BOOKS;
   function sceneHtml(j){
     return `<div class="rd-scene">${rdEsc(j.t)}</div>`+j.ps.map(x=>{
       if(typeof x==='string') return `<p>${rdEsc(x)}</p>`;
-      if(x.poem) return `<div class="poem">${rdEsc(x.poem)}</div>`;
+      if(x.poem) return `<div class="poem">${rdEsc(x.poem)}</div>`+(x.r?`<span class="ref" style="margin:-12px 0 18px">${rdEsc(x.r)}</span>`:'');
       let h=x.sp?`<span class="sp">${rdEsc(x.sp)}</span> `:'';
       h+=rdEsc(x.p).replace(/【(.+?)】/g,'<span class="vs">$1</span>');
       if(x.r) h+=`<span class="ref">${rdEsc(x.r)}</span>`;
